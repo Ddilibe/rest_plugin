@@ -1,0 +1,24 @@
+.
+├── main.php
+├── src
+│   ├── config
+│   │   └── jwt.php
+│   ├── Controllers
+│   │   ├── AuthController.php
+│   │   ├── HelloController.php
+│   │   └── SubmitController.php
+│   ├── loader.php
+│   ├── Middleware
+│   │   ├── Auth.php
+│   │   └── RateLimit.php
+│   ├── Routes
+│   │   ├── AuthRoute.php
+│   │   ├── HelloRoute.php
+│   │   └── SubmitRoute.php
+│   └── utils
+│       ├── jwt.php
+│       └── response.php
+├── swagger.json
+└── tree.txt
+
+7 directories, 15 files

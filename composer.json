@@ -1,0 +1,23 @@
+{
+    "name": "cison/my-rest-api",
+    "description": "A modular REST API plugin for WordPress with JWT authentication",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Ddilibe",
+            "email": "franklinfidelugwuowo@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "SRC\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    }
+}

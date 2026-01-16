@@ -1,0 +1,35 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Composer
+vendor/
+
+# Node.js (if used)
+node_modules/
+
+# WordPress specific
+wp-content/uploads/
+wp-content/cache/
+wp-config.php
+
+# Temporary files
+*.tmp
+*.bak
+
+# Build files
+build/
+dist/
