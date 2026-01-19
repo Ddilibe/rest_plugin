@@ -65,7 +65,22 @@ add_filter('bb_rest_is_allowed', function ($allowed, $request) {
 
     return $allowed;
 
-}, 20, 2);
+}, 999, 2);
+
+
+/**
+ * Fallback: disable BuddyBoss REST auth for our namespace
+ */
+add_filter('rest_authentication_errors', function ($result) {
+
+    if (! empty($_SERVER['REQUEST_URI'])
+        && strpos($_SERVER['REQUEST_URI'], '/wp-json/cison/v1/') !== false
+    ) {
+        return null;
+    }
+
+    return $result;
+}, 0);
 
 
 // register_activation_hook(__FILE__, function () {
