@@ -50,6 +50,24 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+add_filter('bb_rest_is_allowed', function ($allowed, $request) {
+
+    if (! $request instanceof WP_REST_Request) {
+        return $allowed;
+    }
+
+    $route = $request->get_route();
+
+    // Allow ALL CISON API routes publicly
+    if (strpos($route, '/cison/v1/') === 0) {
+        return true;
+    }
+
+    return $allowed;
+
+}, 20, 2);
+
+
 // register_activation_hook(__FILE__, function () {
 //     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
