@@ -71,6 +71,12 @@ class AuthController
             return Response::error('Invalid email format', 400);
         }
 
+        $acceptedUsers = (array) Config::get('ACCEPTED_USERS', []);
+
+        if (!in_array($email, $acceptedUsers, false)) {
+            return Response::error('Access denied', 403);
+        }
+
         $user = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT ID, user_email FROM {$table} WHERE user_email = %s LIMIT 1",
