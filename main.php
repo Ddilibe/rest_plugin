@@ -82,6 +82,16 @@ add_filter('rest_authentication_errors', function ($result) {
     return $result;
 }, 0);
 
+add_filter('bb_rest_is_request_to_rest_api', function($is_rest_api) {
+    $request_uri = $_SERVER['REQUEST_URI'];
+
+    if (strpos($request_uri, '/wp-json/cison/v1/') !== false) {
+        return true;
+    }
+
+    return $is_rest_api;
+});
+
 
 // register_activation_hook(__FILE__, function () {
 //     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
