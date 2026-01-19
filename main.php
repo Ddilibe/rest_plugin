@@ -40,6 +40,17 @@ if (class_exists('SRC\\Loader')) {
     error_log('SRC\\Loader not found after autoload');
 }
 
+// Add this RIGHT AFTER your autoloader, before SRC\Loader::init()
+add_action('rest_api_init', function () {
+    register_rest_route('cison/v1', '/test', [
+        'methods' => 'GET',
+        'callback' => function () {
+            return ['message' => 'Hello World - Direct Test'];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
+
 /**
  * Register Swagger docs endpoint
  */
