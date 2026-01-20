@@ -142,6 +142,16 @@ class UserController
                 continue;
             }
 
+            $firstname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+                : '';
+            $middlename = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+                : '';
+            $surname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+                : '';
+
             $single_data = array(
                     "user_id"=> $user_id,
                     "first_name"=> $firstname,
@@ -178,6 +188,16 @@ class UserController
             if (count($has_certificate) !== 0) {
                 continue;
             }
+
+            $firstname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+                : '';
+            $middlename = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+                : '';
+            $surname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+                : '';
 
             $single_data = array(
                     "user_id"=> $user_id,
