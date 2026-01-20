@@ -109,6 +109,7 @@ class UserController
                 "certificate_validity" => cison_preview_user_eligibility($user_id),
                 "has_certificate" => $has_certificate,
                 "paid_fees" => $paid_fees,
+                "is_transiting" => $is_transiting ? true : false,
             );
 
             $all_data[] = $single_data;
@@ -199,6 +200,11 @@ class UserController
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
 
+            $is_transiting = bp_get_profile_field_data([
+                'field'   => 1595,
+                'user_id'=> $user_id,
+                ]) === 'Yes';
+
             $paid_fees = cison_get_paid_fees($user_id);
 
             $single_data = array(
@@ -209,6 +215,7 @@ class UserController
                     "has_certificate" => $has_certificate,
                     "certificate_validity" => $certificate_validity,
                     "paid_fees" => $paid_fees,
+                    "is_transiting" => $is_transiting,
                 );
             $all_data[] = $single_data;
         }
