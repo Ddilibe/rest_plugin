@@ -138,7 +138,7 @@ class UserController
                 return $certificate["user_id"] === $user_id;
             });
 
-            if (!$has_certificate) {
+            if ($has_certificate === 0) {
                 continue;
             }
 
@@ -175,7 +175,7 @@ class UserController
                 return $certificate["user_id"] === $user_id;
             });
 
-            if ($has_certificate) {
+            if (count($has_certificate) !== 0) {
                 continue;
             }
 
