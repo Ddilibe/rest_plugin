@@ -10,6 +10,10 @@ use SRC\Middleware\Auth;
 class UserRoute {
 
     public static function register() {
+        global $part_a;
+        $part_a='cison/v1';
+
+
         register_rest_route('cison/v1', '/all-users', [
             'methods' => 'GET',
             'callback' => [UserController::class, 'getAllUsers'],
@@ -25,5 +29,11 @@ class UserRoute {
             'callback' => [UserController::class, 'getTransitingMembers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/validtransiting', [
+            'methods'=>'GET',
+            'callback' => [UserController::class, 'getMemebersThatAreTransitingThatHavePaid'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+        
     }
 }

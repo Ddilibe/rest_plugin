@@ -5,6 +5,8 @@ use SRC\Routes\AuthRoute;
 use SRC\Routes\HelloRoute;
 use SRC\Routes\SubmitRoute;
 use SRC\Routes\UserRoute;
+use SRC\Routes\ProductRoute;
+
 
 class Loader
 {
@@ -19,5 +21,6 @@ class Loader
         HelloRoute::register();
         SubmitRoute::register();
         UserRoute::register();
+        ProductRoute::register();
     }
 }
