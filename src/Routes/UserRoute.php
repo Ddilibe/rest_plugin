@@ -39,6 +39,10 @@ class UserRoute {
             'callback' => [UserController::class, 'getMembersThatHaveCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
-
+        register_rest_route('cison/v1', '/nocertificate', [
+            'methods'=>'GET',
+            'callback' => [UserController::class, 'getMembersThatDoNotHaveCertificate'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }

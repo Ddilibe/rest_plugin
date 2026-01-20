@@ -156,4 +156,41 @@ class UserController
         return rest_ensure_response(["data"=>$all_data, "status"=>"success"],200);
     }
 
+    public static function getMembersThatDoNotHaveCertificate() {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'users';
+
+        $all_data = array();
+
+        $all_users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
+        $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
+
+        foreach ($all_users as $value) {
+            $user_id = (int) $value["ID"];
+            
+            $certificate_validity=cison_preview_user_eligibility($user_id);
+
+            $has_certificate = array_filter($certificate, function ($certificate) {
+                return $certificate["user_id"] === $user_id;
+            });
+
+            if ($has_certificate) {
+                continue;
+            }
+
+            $single_data = array(
+                    "user_id"=> $user_id,
+                    "first_name"=> $firstname,
+                    "middle_name"=> $middlename,
+                    "last_name"=> $surname,
+                    "has_certificate" => $has_certificate,
+                    "certificate_validity" => $certificate_validity
+                );
+            $all_data[] = $single_data;
+        }
+
+        return rest_ensure_response(["data"=>$all_data, "status"=>"success"],200);
+    }
+
 }
