@@ -247,3 +247,21 @@ function cison_get_required_fees($is_transiting, $reg_year) {
 
     return $required;
 }
+
+
+/**
+ * Helper: compute unpaid fees from required + paid_fees array.
+ *
+ * $paid_fees is an array keyed like $required_fees with boolean values.
+ */
+function cison_get_unpaid_fees($required_fees, $paid_fees) {
+    $unpaid = [];
+
+    foreach ($required_fees as $key => $fee) {
+        if (empty($paid_fees[$key])) {
+            $unpaid[$key] = $fee;
+        }
+    }
+
+    return $unpaid;
+}

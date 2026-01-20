@@ -93,7 +93,7 @@ class UserController
             $surname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
-
+            $paid_fees = cison_get_paid_fees($user_id);
 
             $single_data = array(
                 "user_id"=> $user_id,
@@ -108,7 +108,7 @@ class UserController
                 "member_id"=> $member_id,
                 "certificate_validity" => cison_preview_user_eligibility($user_id),
                 "has_certificate" => $has_certificate,
-
+                "paid_fees" => $paid_fees,
             );
 
             $all_data[] = $single_data;
@@ -199,13 +199,16 @@ class UserController
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
 
+            $paid_fees = cison_get_paid_fees($user_id);
+
             $single_data = array(
                     "user_id"=> $user_id,
                     "first_name"=> $firstname,
                     "middle_name"=> $middlename,
                     "last_name"=> $surname,
                     "has_certificate" => $has_certificate,
-                    "certificate_validity" => $certificate_validity
+                    "certificate_validity" => $certificate_validity,
+                    "paid_fees" => $paid_fees,
                 );
             $all_data[] = $single_data;
         }
