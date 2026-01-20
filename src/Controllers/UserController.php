@@ -46,8 +46,8 @@ class UserController
         
         $members = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
-        foreach ($members as $key => $value) {
-            $user_id = $value["user_id"];
+        foreach ($members as $value) {
+            $user_id = (int) $value["user_id"];
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
