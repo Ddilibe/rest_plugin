@@ -74,7 +74,7 @@ class UserController
 
             $single_data = 
             array(
-                "user_id"=> $value["user_id"],
+                "user_id"=> $user_id,
                 "user_login"=> $value["user_login"],
                 "user_email"=> $value["user_email"],
                 "joined_date" => $value["user_registered"],
