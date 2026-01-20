@@ -33,6 +33,12 @@ class UserRoute {
             'methods'=>'GET',
             'callback' => [UserController::class, 'getMemebersThatAreTransitingThatHavePaid'],
             'permission_callback' => [Auth::class, 'jwt'],
-        ]);      
+        ]);
+        register_rest_route('cison/v1', '/hascertificate', [
+            'methods' => 'GET',
+            'callback' => [UserController::class, 'getMembersThatHaveCertificate'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+
     }
 }
