@@ -79,6 +79,7 @@ class UserController
                 "user_email"=> $value["user_email"],
                 "joined_date" => $value["user_registered"],
                 "phone_number"=> $phone_number,
+                "display_name"=> $value["display_name"],
                 "member_id"=> $member_id,
             );
 
