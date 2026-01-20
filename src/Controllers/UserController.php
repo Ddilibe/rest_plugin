@@ -219,7 +219,7 @@ class UserController
 
     public static function allCertificate() {
         global $wpdb;
-        $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
+        $certificates = $wpdb->get_results("SELECT * FROM wprx_cison_certificates", ARRAY_A);
         return rest_ensure_response(["data"=>$certificates, "status"=>"success"]);
     }
 }
