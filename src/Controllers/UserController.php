@@ -107,7 +107,7 @@ class UserController
                 "display_name"=> $value["display_name"],
                 "member_id"=> $member_id,
                 "certificate_validity" => cison_preview_user_eligibility($user_id),
-                "has_certificate" => $has_certificate[0] ? "Yes" : "No",
+                "has_certificate" => $has_certificate,
 
             );
 

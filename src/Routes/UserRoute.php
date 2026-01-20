@@ -33,7 +33,6 @@ class UserRoute {
             'methods'=>'GET',
             'callback' => [UserController::class, 'getMemebersThatAreTransitingThatHavePaid'],
             'permission_callback' => [Auth::class, 'jwt'],
-        ]);
-        
+        ]);      
     }
 }
