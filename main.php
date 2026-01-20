@@ -88,7 +88,19 @@ add_action('init', function() {
     }
 });
 */
-
+/**
+ * Force different namespace for BuddyBoss avoidance
+ */
+add_action('init', function() {
+    // Check current namespace in use
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($uri, '/wp-json/cison-api/v1/') !== false) {
+        // Disable BuddyBoss for this namespace
+        add_filter('bb_rest_is_allowed', function() {
+            return true;
+        }, 9999);
+    }
+});
 /**
  * PSR-4 AUTOLOADER FOR SRC\
  */
