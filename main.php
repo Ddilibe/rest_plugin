@@ -15,37 +15,28 @@ define('MYAPI_PATH', plugin_dir_path(__FILE__));
 error_log('=== My REST API Plugin Loading ===');
 
 /**
- * CRITICAL: Disable BuddyBoss REST API restrictions FOR OUR NAMESPACE
- * This must run at plugins_loaded with priority 0 (BEFORE BuddyBoss)
+ * DISABLE BuddyBoss REST API restrictions FOR OUR NAMESPACE
+ * This must run EARLY, before BuddyBoss loads its restrictions
  */
 add_action('plugins_loaded', function() {
-    error_log('=== Plugins loaded - Disabling BuddyBoss restrictions ===');
+    error_log('Plugins loaded - checking BuddyBoss restrictions');
     
-    // Nuclear option: Disable ALL BuddyBoss REST API functionality
-    if (class_exists('BP_REST_Components_Endpoint')) {
-        error_log('Disabling BuddyBoss REST API core functionality');
-        
-        // Remove BuddyBoss REST API initialization
-        remove_action('rest_api_init', 'bp_rest_init', 10);
-        
-        // Remove authentication errors
-        remove_filter('rest_authentication_errors', 'bp_rest_authentication_errors', 15);
-        
-        // Remove CORS headers
-        remove_filter('rest_pre_serve_request', 'bp_rest_send_cors_headers', 15);
-        remove_filter('rest_pre_serve_request', 'bp_rest_allow_all_cors', 15);
-        
-        // Remove endpoint registration
-        remove_action('rest_api_init', 'bp_rest_register_endpoints', 10);
-        
-        // Clear any cached endpoints
-        global $wp_rest_server;
-        if ($wp_rest_server) {
-            $wp_rest_server->override_by_default = true;
+    // Priority 0 to run before BuddyBoss
+    add_filter('bb_rest_is_request_to_rest_api', function($is_rest_api) {
+        if (!empty($_SERVER['REQUEST_URI'])) {
+            $request_uri = $_SERVER['REQUEST_URI'];
+            error_log('Checking request URI: ' . $request_uri);
+            
+            // If it's our API, force it to be recognized as REST API
+            if (strpos($request_uri, '/wp-json/cison/v1/') !== false) {
+                error_log('Forcing cison/v1 to be recognized as REST API');
+                return true;
+            }
         }
-    }
+        return $is_rest_api;
+    }, 0);
     
-    // Completely bypass bb_rest_is_allowed for our namespace
+    // Disable BuddyBoss authentication for our namespace
     add_filter('bb_rest_is_allowed', function ($allowed, $request) {
         if (!$request instanceof WP_REST_Request) {
             return $allowed;
@@ -56,61 +47,60 @@ add_action('plugins_loaded', function() {
         
         // Allow ALL routes under cison/v1 without authentication
         if (strpos($route, '/cison/v1/') === 0) {
-            error_log('BYPASSING BuddyBoss auth for: ' . $route);
+            error_log('ALLOWING cison/v1 route: ' . $route);
             return true; // This is the key - return TRUE to bypass auth
         }
         
-        // Also allow root cison/v1
-        if ($route === '/cison/v1' || $route === '/cison/v1/') {
-            error_log('BYPASSING BuddyBoss auth for namespace root');
-            return true;
-        }
-        
         return $allowed;
-    }, 999999, 2); // Very high priority
+    }, 999, 2);
     
-    // Also bypass the main WordPress REST authentication
-    add_filter('rest_authentication_errors', function ($result) {
-        global $wp;
-        
-        // Get current route
-        $route = isset($wp->query_vars['rest_route']) ? $wp->query_vars['rest_route'] : '';
-        if (empty($route) && !empty($_SERVER['REQUEST_URI'])) {
-            $uri = $_SERVER['REQUEST_URI'];
-            if (strpos($uri, '/wp-json/cison/v1/') !== false) {
-                $route = '/cison/v1' . str_replace('/wp-json/cison/v1', '', $uri);
-            }
-        }
-        
-        // Bypass authentication for our namespace
-        if (strpos($route, '/cison/v1/') === 0 || $route === '/cison/v1') {
-            error_log('Bypassing rest_authentication_errors for: ' . $route);
-            return null; // Return null means authenticated
-        }
-        
-        return $result;
-    }, 999999);
-    
-    // Force REST API to recognize our routes
-    add_filter('rest_pre_dispatch', function($result, $server, $request) {
+    // Also disable BuddyBoss' rest_send_cors_headers filter
+    add_filter('rest_pre_serve_request', function($served, $result, $request, $server) {
         $route = $request->get_route();
-        
-        if (strpos($route, '/cison/v1/') === 0 || $route === '/cison/v1') {
-            error_log('rest_pre_dispatch for cison/v1 route: ' . $route);
-            
-            // Force authentication to pass
-            $user_id = apply_filters('determine_current_user', false);
-            if (!$user_id) {
-                // Set a dummy user to bypass auth
-                wp_set_current_user(0);
-            }
+        if (strpos($route, '/cison/v1/') === 0) {
+            // Remove BuddyBoss CORS headers
+            remove_filter('rest_pre_serve_request', 'bp_rest_allow_all_cors', 15);
+            remove_filter('rest_pre_serve_request', 'bp_rest_send_cors_headers', 15);
         }
-        
-        return $result;
-    }, 10, 3);
+        return $served;
+    }, 1, 4);
     
-}, 0); // Priority 0 to run BEFORE BuddyBoss
+    // Disable BuddyBoss specific authentication
+    add_filter('bp_rest_authentication_errors', function($error) {
+        if (!empty($_SERVER['REQUEST_URI']) && 
+            strpos($_SERVER['REQUEST_URI'], '/wp-json/cison/v1/') !== false) {
+            error_log('Bypassing bp_rest_authentication_errors for cison/v1');
+            return null; // Return null to indicate no error
+        }
+        return $error;
+    }, 10);
+}, 0); // Priority 0 to run before BuddyBoss loads
 
+/**
+ * ALTERNATIVE: Completely disable BuddyBoss REST API if needed
+ * Uncomment if the above doesn't work
+ */
+/*
+add_action('init', function() {
+    if (class_exists('BP_REST_Components_Endpoint')) {
+        remove_action('rest_api_init', 'bp_rest_register_endpoints', 10);
+        remove_filter('rest_authentication_errors', 'bp_rest_authentication_errors', 15);
+    }
+});
+*/
+/**
+ * Force different namespace for BuddyBoss avoidance
+ */
+add_action('init', function() {
+    // Check current namespace in use
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($uri, '/wp-json/cison-api/v1/') !== false) {
+        // Disable BuddyBoss for this namespace
+        add_filter('bb_rest_is_allowed', function() {
+            return true;
+        }, 9999);
+    }
+});
 /**
  * PSR-4 AUTOLOADER FOR SRC\
  */
@@ -146,35 +136,26 @@ if (class_exists('SRC\\Loader')) {
  * Add CORS headers for our API
  */
 add_action('rest_api_init', function() {
-    // Remove any existing CORS headers from BuddyBoss
+    // Remove BuddyBoss CORS headers for our namespace
     remove_filter('rest_pre_serve_request', 'bp_rest_send_cors_headers', 15);
-    remove_filter('rest_pre_serve_request', 'bp_rest_allow_all_cors', 15);
     
     // Add our own CORS headers
     add_filter('rest_pre_serve_request', function($value) {
-        $route = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-        
-        if (strpos($route, '/wp-json/cison/v1') !== false) {
-            error_log('Adding CORS headers for cison/v1 request');
+        if (!empty($_SERVER['REQUEST_URI']) && 
+            strpos($_SERVER['REQUEST_URI'], '/wp-json/cison/v1/') !== false) {
             
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
             header('Access-Control-Allow-Credentials: true');
-            header('Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce, X-Requested-With');
+            header('Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce');
             header('Access-Control-Expose-Headers: X-WP-Total, X-WP-TotalPages, X-WP-Nonce');
-            
-            // Handle preflight requests
-            if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-                status_header(200);
-                exit;
-            }
         }
         return $value;
     }, 20);
-}, 0);
+});
 
 /**
- * Register Swagger docs endpoint (must be public)
+ * Register Swagger docs endpoint
  */
 add_action('rest_api_init', function () {
     error_log('Registering /docs endpoint');
@@ -182,106 +163,51 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => function () {
             error_log('Docs endpoint called');
-            $docs_file = MYAPI_PATH . 'swagger.json';
-            
-            if (file_exists($docs_file)) {
-                $content = file_get_contents($docs_file);
-                return json_decode($content, true);
-            } else {
-                return [
-                    'error' => 'Swagger docs not found',
-                    'file' => $docs_file
-                ];
-            }
+            return file_get_contents(MYAPI_PATH . 'swagger.json');
         },
-        'permission_callback' => function() {
-            // Always allow access to docs
-            return true;
-        }
+        'permission_callback' => '__return_true'
     ]);
-}, 10);
-
-/**
- * Register a simple hello endpoint for testing
- */
-add_action('rest_api_init', function() {
-    error_log('Registering hello endpoint');
-    register_rest_route('cison/v1', '/hello', [
-        'methods' => 'GET',
-        'callback' => function() {
-            return [
-                'success' => true,
-                'message' => 'Hello from CISON API!',
-                'timestamp' => current_time('timestamp'),
-                'version' => '1.0.0',
-                'routes' => [
-                    '/hello',
-                    '/docs',
-                    '/auth/login',
-                    '/buddyboss/stats',
-                    '/buddyboss/groups',
-                    '/buddyboss/activity',
-                    '/buddyboss/profile/{id}'
-                ]
-            ];
-        },
-        'permission_callback' => function() {
-            // Always allow access to hello endpoint
-            return true;
-        }
-    ]);
-}, 10);
+});
 
 /**
  * Log all REST requests to our namespace
  */
 add_filter('rest_pre_dispatch', function($result, $server, $request) {
     $route = $request->get_route();
-    if (strpos($route, '/cison/v1/') === 0 || $route === '/cison/v1') {
-        error_log('=== CISON API Request ===');
-        error_log('Route: ' . $route);
+    if (strpos($route, '/cison/v1/') === 0) {
+        error_log('REST Request to: ' . $route);
         error_log('Method: ' . $request->get_method());
-        error_log('Params: ' . json_encode($request->get_params()));
+        error_log('Query params: ' . json_encode($request->get_query_params()));
         
-        // Check if route exists
-        $routes = $server->get_routes();
-        if (!isset($routes[$route]) && !isset($routes[$route . '/'])) {
-            error_log('Route NOT FOUND in registered routes');
-        } else {
-            error_log('Route FOUND');
+        // Force authentication bypass
+        if (!is_user_logged_in() && strpos($route, '/cison/v1/auth') === false) {
+            error_log('User not logged in, but allowing API access');
         }
     }
     return $result;
 }, 10, 3);
 
 /**
- * DEBUG: List all registered routes on admin page
+ * NUCLEAR OPTION: Disable all authentication for our namespace
+ * Add this as a last resort
  */
-if (is_admin()) {
-    add_action('admin_notices', function() {
-        global $wp_rest_server;
+add_filter('rest_authentication_errors', function ($result) {
+    if (!empty($_SERVER['REQUEST_URI']) && 
+        strpos($_SERVER['REQUEST_URI'], '/wp-json/cison/v1/') !== false) {
+        error_log('rest_authentication_errors: Bypassing ALL auth for cison/v1');
         
-        if ($wp_rest_server) {
-            $routes = $wp_rest_server->get_routes();
-            
-            echo '<div class="notice notice-info">';
-            echo '<h3>CISON API Registered Routes:</h3>';
-            echo '<ul>';
-            
-            foreach ($routes as $route => $handlers) {
-                if (strpos($route, '/cison/v1') === 0) {
-                    echo '<li><strong>' . esc_html($route) . '</strong>';
-                    foreach ($handlers as $handler) {
-                        if (isset($handler['methods'])) {
-                            echo ' - Methods: ' . implode(', ', array_keys($handler['methods']));
-                        }
-                    }
-                    echo '</li>';
-                }
-            }
-            
-            echo '</ul>';
-            echo '</div>';
+        // Check if there's already an error
+        if (is_wp_error($result) && $result->get_error_code() === 'rest_not_logged_in') {
+            error_log('Overriding rest_not_logged_in error');
+            return true; // Return true to indicate it's allowed
         }
-    });
-}
+        
+        // If BuddyBoss is blocking, return true to bypass
+        if ($result instanceof WP_Error && 
+            $result->get_error_code() === 'bb_rest_authorization_required') {
+            error_log('Overriding bb_rest_authorization_required error');
+            return true;
+        }
+    }
+    return $result;
+}, 999); // Very high priority to override BuddyBoss
