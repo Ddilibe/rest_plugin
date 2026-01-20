@@ -15,5 +15,15 @@ class UserRoute {
             'callback' => [UserController::class, 'getAllUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/members', [
+            'methods'=>'GET',
+            'callback' => [UserController::class, 'getGroupMembers'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+        register_rest_route('cison/v1', '/transiting', [
+            'methods'=>'GET',
+            'callback' => [UserController::class, 'getTransitingMembers'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }
