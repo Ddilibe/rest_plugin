@@ -47,7 +47,7 @@ class UserController
         $members = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
         foreach ($members as $value) {
-            $user_id = (int) $value["user_id"];
+            $user_id = (int) $value["ID"];
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
@@ -62,7 +62,7 @@ class UserController
                 'user_id'=> $user_id,
             ]) ?: '';
 
-            if ($is_transiting) {
+            if (!$is_transiting) {
                 continue;
             }
 
