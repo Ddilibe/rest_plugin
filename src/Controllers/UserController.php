@@ -134,7 +134,7 @@ class UserController
             
             $certificate_validity=cison_preview_user_eligibility($user_id);
 
-            $has_certificate = array_filter($certificate, function ($certificate) {
+            $has_certificate = array_filter($certificates, function ($certificate) {
                 return $certificate["user_id"] === $user_id;
             });
 
@@ -171,7 +171,7 @@ class UserController
             
             $certificate_validity=cison_preview_user_eligibility($user_id);
 
-            $has_certificate = array_filter($certificate, function ($certificate) {
+            $has_certificate = array_filter($certificates, function ($certificate) {
                 return $certificate["user_id"] === $user_id;
             });
 
