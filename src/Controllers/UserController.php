@@ -216,4 +216,9 @@ class UserController
         return rest_ensure_response(["data"=>$all_data, "status"=>"success"],200);
     }
 
+
+    public static function allCertificate() {
+        $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
+        return rest_ensure_response(["data"=>$certificates, "status"=>"success"]);
+    }
 }
