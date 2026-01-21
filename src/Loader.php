@@ -6,6 +6,7 @@ use SRC\Routes\HelloRoute;
 use SRC\Routes\SubmitRoute;
 use SRC\Routes\UserRoute;
 use SRC\Routes\ProductRoute;
+use SRC\Routes\CertRoute;
 
 
 class Loader
@@ -22,5 +23,6 @@ class Loader
         SubmitRoute::register();
         UserRoute::register();
         ProductRoute::register();
+        CertRoute::register();
     }
 }
