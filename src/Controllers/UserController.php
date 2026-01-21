@@ -249,38 +249,38 @@ class UserController
             return $certificate["user_id"] === $user_id;
         });
 
-        $firstname = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
-            : '';
-        $middlename = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
-            : '';
-        $surname = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
-            : '';
+        // $firstname = function_exists('bp_get_profile_field_data')
+        //     ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+        //     : '';
+        // $middlename = function_exists('bp_get_profile_field_data')
+        //     ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+        //     : '';
+        // $surname = function_exists('bp_get_profile_field_data')
+        //     ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+        //     : '';
 
-        $is_transiting = bp_get_profile_field_data([
-            'field'   => 1595,
-            'user_id'=> $user_id,
-            ]) === 'Yes';
+        // $is_transiting = bp_get_profile_field_data([
+        //     'field'   => 1595,
+        //     'user_id'=> $user_id,
+        //     ]) === 'Yes';
         
-        $member_id = bp_get_profile_field_data([
-                'field'   => 894,
-                'user_id'=> $user_id,
-            ]) ?: '';
+        // $member_id = bp_get_profile_field_data([
+        //         'field'   => 894,
+        //         'user_id'=> $user_id,
+        //     ]) ?: '';
 
-        $paid_fees = cison_get_paid_fees($user_id);
+        // $paid_fees = cison_get_paid_fees($user_id);
 
-        if (function_exists('wc_get_orders')) {
-            $orders = wc_get_orders([
-                'customer_id' => $user_id,
-                'status'      => ['completed', 'processing'],
-                'limit'       => -1,
-                'return'      => 'objects',
-                'orderby'     => 'date_completed',
-            ]);
-        }
-        $user_info = get_userdata($user_id);
+        // if (function_exists('wc_get_orders')) {
+        //     $orders = wc_get_orders([
+        //         'customer_id' => $user_id,
+        //         'status'      => ['completed', 'processing'],
+        //         'limit'       => -1,
+        //         'return'      => 'objects',
+        //         'orderby'     => 'date_completed',
+        //     ]);
+        // }
+        // $user_info = get_userdata($user_id);
 
         $single_data = array(
             "user_id"=> $user_id,
