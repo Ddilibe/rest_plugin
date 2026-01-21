@@ -6,6 +6,9 @@ use SRC\Config\Config;
 use SRC\Utils\money;
 use SRC\Utils\Certificate;
 
+use WP_Error;
+use WP_REST_REQUEST;
+
 
 define('CISON_CURRENT_YEAR', (int) date('Y'));
 define('CISON_CERT_TABLE', Config::get('CISON_CERT_TABLE', ''));
@@ -229,4 +232,72 @@ class UserController
         $certificates = $wpdb->get_results("SELECT * FROM wprx_cison_certificates", ARRAY_A);
         return rest_ensure_response(["data"=>$certificates, "status"=>"success"]);
     }
+
+    public static function getUserWithUserId(WP_REST_REQUEST $request) {
+        $params = $request->get_json_params();
+        
+        $user_id = params["user_id"];
+        if (!$user_id) {
+            return new WP_Error("invalid_id", "user ID is required", ['status' => 400]);
+        }
+
+        global $wpdb;
+
+        $certificate_validity=cison_preview_user_eligibility($user_id);
+
+        $has_certificate = array_filter($certificates, function ($certificate) {
+            return $certificate["user_id"] === $user_id;
+        });
+
+        $firstname = function_exists('bp_get_profile_field_data')
+            ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+            : '';
+        $middlename = function_exists('bp_get_profile_field_data')
+            ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+            : '';
+        $surname = function_exists('bp_get_profile_field_data')
+            ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+            : '';
+
+        $is_transiting = bp_get_profile_field_data([
+            'field'   => 1595,
+            'user_id'=> $user_id,
+            ]) === 'Yes';
+        
+        $member_id = bp_get_profile_field_data([
+                'field'   => 894,
+                'user_id'=> $user_id,
+            ]) ?: '';
+
+        $paid_fees = cison_get_paid_fees($user_id);
+
+        if (function_exists('wc_get_orders')) {
+            $orders = wc_get_orders([
+                'customer_id' => $user_id,
+                'status'      => ['completed', 'processing'],
+                'limit'       => -1,
+                'return'      => 'objects',
+                'orderby'     => 'date_completed',
+            ]);
+        }
+        $user_info = get_userdata($user_id);
+
+        $single_data = array(
+            "user_id"=> $user_id,
+            "first_name"=> $firstname,
+            "middle_name"=> $middlename,
+            "last_name"=> $surname,
+            "has_certificate" => $has_certificate,
+            "certificate_validity" => $certificate_validity,
+            "Joined" => $user_info->user_registered,
+            "paid_fees" => $paid_fees,
+            "member_id" => $member_id,
+            "is_transiting" => $is_transiting,
+            "orders" => $orders,
+        );
+
+        return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
+    }
+
+
 }
