@@ -7,7 +7,7 @@ class ProductController {
     public static function getAllProducts() {
         $args = [
             'limit' => -1,
-            'status' => 'publish',
+            'status' => array('publish', 'draft', 'pending', 'private'),
             'return' => 'objects',
         ];
 
