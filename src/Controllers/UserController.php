@@ -245,9 +245,9 @@ class UserController
 
         $certificate_validity=cison_preview_user_eligibility($user_id);
 
-        $has_certificate = array_filter($certificates, function ($certificate) {
-            return $certificate["user_id"] === $user_id;
-        });
+        // $has_certificate = array_filter($certificates, function ($certificate) {
+        //     return $certificate["user_id"] === $user_id;
+        // });
 
         // $firstname = function_exists('bp_get_profile_field_data') ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
         //     : '';
