@@ -270,6 +270,8 @@ class UserController
 
         $paid_fees = cison_get_paid_fees($user_id);
 
+        $custom_orders = array();
+
         if (function_exists('wc_get_orders')) {
             $orders = wc_get_orders([
                 'customer_id' => $user_id,
@@ -278,8 +280,17 @@ class UserController
                 'return'      => 'objects',
                 'orderby'     => 'date_completed',
             ]);
+            foreach ($orders as $order) {
+                foreach ($order->get_items() as $item) {
+                    $pid = (int) $item->get_product_id();
+                    $prod = wc_get_product($pid);
+                    $custom_orders[] = ["product_id"=>$pid, "product_name" => $prod->get_name];
+                }
+            }
         }
         $user_info = get_userdata($user_id);
+
+        
 
         $single_data = array(
             "user_id"=> $user_id,
@@ -292,7 +303,7 @@ class UserController
             "paid_fees" => $paid_fees,
             "member_id" => $member_id,
             "is_transiting" => $is_transiting,
-            "orders" => $orders,
+            "orders" => $custom_orders,
         );
 
         return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
