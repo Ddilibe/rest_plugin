@@ -49,5 +49,10 @@ class UserRoute {
             'callback' => [UserController::class, 'allCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/user', [
+            'methods'=>'GET',
+            'callback' => [UserController::class, 'getUserWithUserId'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }
