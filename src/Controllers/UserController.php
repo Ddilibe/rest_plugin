@@ -249,14 +249,11 @@ class UserController
             return $certificate["user_id"] === $user_id;
         });
 
-        // $firstname = function_exists('bp_get_profile_field_data')
-        //     ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+        // $firstname = function_exists('bp_get_profile_field_data') ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
         //     : '';
-        // $middlename = function_exists('bp_get_profile_field_data')
-        //     ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+        // $middlename = function_exists('bp_get_profile_field_data') ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
         //     : '';
-        // $surname = function_exists('bp_get_profile_field_data')
-        //     ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+        // $surname = function_exists('bp_get_profile_field_data') ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
         //     : '';
 
         // $is_transiting = bp_get_profile_field_data([
