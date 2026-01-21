@@ -234,14 +234,14 @@ class UserController
     }
 
     public static function getUserWithUserId(WP_REST_REQUEST $request) {
-        $params = $request->get_json_params();
+        global $wpdb;
+
+        $body = $request->get_json_params();
         
-        $user_id = params["user_id"];
+        $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
         if (!$user_id) {
             return new WP_Error("invalid_id", "user ID is required", ['status' => 400]);
         }
-
-        global $wpdb;
 
         $certificate_validity=cison_preview_user_eligibility($user_id);
 
