@@ -7,7 +7,7 @@ use WP_Error;
 
 use SRC\Utils\Certificate;
 
-
+define('CISON_CERT_TABLE', 'wprx_cison_certificates');
 
 class CertController {
     public static function getNextCertNumber() {
@@ -45,7 +45,7 @@ class CertController {
         //     return new WP_Error('not_eligible', $preview['reason'], ['status' => 400]);
         // }
 
-        $cert_table_name = $wpdb->prefix.'cison_certificates';
+        $cert_table_name = CISON_CERT_TABLE;
         $row = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$cert_table_name} WHERE user_id = %d LIMIT 1",
             $user_id
