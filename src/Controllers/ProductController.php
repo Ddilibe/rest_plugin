@@ -2,6 +2,10 @@
 
 namespace SRC\Controllers;
 
+use WP_REST_REQUEST;
+use WP_Error;
+
+
 class ProductController {
 
     public static function getAllProducts() {
@@ -32,7 +36,7 @@ class ProductController {
 
         $body = $request->get_json_params();
         $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
-        $product_id = isset($body['user_id']) ?intval($body['product_id']) : NAN;
+        $product_id = isset($body['product_id']) ?intval($body['product_id']) : NAN;
 
         if (!$user_id | $product_id === NAN) {
             return new WP_Error('not_found', 'Member ID not found', ['status' => 404]);
