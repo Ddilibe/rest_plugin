@@ -28,4 +28,61 @@ class ProductController {
 
     }
 
+    public static function get2025CisonPreconferenceParticipant() {
+
+        $orders = wc_get_orders(array(
+            'limit'    => -1,
+            'status'   => 'completed',
+            'return'   => 'ids',
+            'item_id'  => 6647
+        ));
+
+        $customer_ids = array();
+
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            $customer_ids[] = $order->get_customer_id();
+        }
+
+        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
+
+    }
+
+    public static function get2025CisonConferenceParticipantsOnSite() {
+        $orders = wc_get_orders(array(
+            'limit'    => -1,
+            'status'   => 'completed',
+            'return'   => 'ids',
+            'item_id'  => 6623
+        ));
+
+        $customer_ids = array();
+
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            $customer_ids[] = $order->get_customer_id();
+        }
+
+        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
+
+    }
+
+    public static function get2025CisonConferenceParticipantsOnline() {
+        $orders = wc_get_orders(array(
+            'limit'    => -1,
+            'status'   => 'completed',
+            'return'   => 'ids',
+            'item_id'  => 6625
+        ));
+
+        $customer_ids = array();
+
+        foreach ($orders as $order_id) {
+            $order = wc_get_order($order_id);
+            $customer_ids[] = $order->get_customer_id();
+        }
+
+        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
+    }   
+
 }

@@ -290,15 +290,6 @@ class UserController
         }
         $user_info = get_userdata($user_id);
 
-        $meta_data = array();
-
-        $all_meta = get_user_meta($user_id);
-
-        foreach ($all_meta as $key => $values) {
-            $meta_data=array_merge($meta_data, [$key => $value[0]]);
-        }
-
-
         $single_data = array(
             "user_id"=> $user_id,
             "first_name"=> $firstname,
@@ -311,7 +302,6 @@ class UserController
             "member_id" => $member_id,
             "is_transiting" => $is_transiting,
             "orders" => $custom_orders,
-            "meta_data" => $meta_data,
         );
 
         return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
