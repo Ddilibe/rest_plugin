@@ -290,7 +290,14 @@ class UserController
         }
         $user_info = get_userdata($user_id);
 
-        
+        $meta_data = array();
+
+        $all_meta = get_user_meta($user_id);
+
+        foreach ($all_meta as $key => $values) {
+            $meta_data=array_merge($meta_data, [$key => $value[0]]);
+        }
+
 
         $single_data = array(
             "user_id"=> $user_id,
@@ -304,6 +311,7 @@ class UserController
             "member_id" => $member_id,
             "is_transiting" => $is_transiting,
             "orders" => $custom_orders,
+            "meta_data" => $meta_data,
         );
 
         return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
@@ -317,7 +325,7 @@ class UserController
 
         $member_id_response = bp_get_profile_field_data([
                 'field'   => 894,]);
-        if (!$member_id_response) {
+        if ($member_id_response) {
             return rest_ensure_response(['data' => $member_id_response, 'status'=>'success'], 200);
         }
         return new WP_Error("invalid_id", "member ID is required", ['status' => 400]);
