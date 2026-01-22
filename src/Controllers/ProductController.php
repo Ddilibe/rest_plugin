@@ -33,7 +33,7 @@ class ProductController {
         $orders = wc_get_orders(array(
             'limit'    => -1,
             'status'   => 'completed',
-            'return'   => 'object',
+            'return'   => 'ids',
             'item_id'  => 6647
         ));
 
@@ -44,7 +44,7 @@ class ProductController {
             $customer_ids[] = $order->get_customer_id();
         }
 
-        return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success']);
+        return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
 
     }
 
