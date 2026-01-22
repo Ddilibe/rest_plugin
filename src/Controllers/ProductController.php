@@ -39,7 +39,7 @@ class ProductController {
 
 
             foreach ($orders as $order_id) {
-                // $order = wc_get_order($order_id);
+                $order = wc_get_order($order_id);
                 $customer_ids[] = ['Pig', 'ant'];
             }
 
