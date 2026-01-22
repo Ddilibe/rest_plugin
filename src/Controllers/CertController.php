@@ -44,7 +44,7 @@ class CertController {
         // if (empty($preview['eligible'])) {
         //     return new WP_Error('not_eligible', $preview['reason'], ['status' => 400]);
         // }
-        
+
         $cert_table_name = $wpdb->prefix.'cison_certificates';
         $row = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$cert_table_name} WHERE user_id = %d LIMIT 1",
@@ -52,7 +52,7 @@ class CertController {
         ));
 
         if (!empty($row)) {
-            cison_check_eligibility_and_create_row_if_missing($user_id);
+            cison_create_row_for_certification($user_id);
         }
 
         if (file_exists($row->certificate_path)) {
