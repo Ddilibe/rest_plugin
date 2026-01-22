@@ -40,10 +40,11 @@ class CertController {
             return new WP_Error('not_found', "User not found: $user_id Member: $member_id", ['status' => 404]);
         }
 
-        $preview = cison_preview_user_eligibility($user_id);
-        if (empty($preview['eligible'])) {
-            return new WP_Error('not_eligible', $preview['reason'], ['status' => 400]);
-        }
+        // $preview = cison_preview_user_eligibility($user_id);
+        // if (empty($preview['eligible'])) {
+        //     return new WP_Error('not_eligible', $preview['reason'], ['status' => 400]);
+        // }
+        
         $cert_table_name = $wpdb->prefix.'cison_certificates';
         $row = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$cert_table_name} WHERE user_id = %d LIMIT 1",
