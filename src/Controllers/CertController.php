@@ -37,7 +37,7 @@ class CertController {
         }
 
         if (empty($user_id)) {
-            return new WP_Error('not_found', "User not found: $user_id", ['status' => 404]);
+            return new WP_Error('not_found', "User not found: $user_id Member: $member_id", ['status' => 404]);
         }
 
         $preview = cison_preview_user_eligibility($user_id);
