@@ -21,5 +21,11 @@ class CertRoute {
             'callback' => [CertController::class, 'addNewCertification'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+
+        register_rest_route($part_a, '/single-certificate',[
+            'methods' => 'GET',
+            'callback' => [CertController::class, 'singleCertificate'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }
