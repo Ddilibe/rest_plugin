@@ -117,3 +117,116 @@ function cison_preview_user_eligibility($user_id) {
     ];
 }
 
+
+function cison_check_eligibility_and_create_row_if_missing($user_id) {
+    global $wpdb;
+    $table = CISON_CERT_TABLE;
+
+    $user_id = (int) $user_id;
+
+    $member_id = function_exists('bp_get_profile_field_data')
+        ? bp_get_profile_field_data(['field' => 894, 'user_id' => $user_id])
+        : '';
+
+    if (empty($member_id)) {
+        return false;
+    }
+
+    // If row exists & file exists, nothing to do
+    $existing = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$table} WHERE user_id = %d LIMIT 1",
+        $user_id
+    ));
+
+    if ($existing && !empty($existing->certificate_path) && file_exists($existing->certificate_path)) {
+        return true;
+    }
+
+    // Check eligibility
+    $preview = cison_preview_user_eligibility($user_id);
+    if (empty($preview['eligible'])) {
+        return false;
+    }
+
+    $is_transiting = function_exists('bp_get_profile_field_data')
+        ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $user_id]) === 'Yes')
+        : false;
+
+    $member_type   = $is_transiting ? 'transiting' : 'inducted';
+    $applied_cutoff = $preview['applied_cutoff'] ?? null;
+
+    $firstname = function_exists('bp_get_profile_field_data')
+        ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+        : '';
+    $middlename = function_exists('bp_get_profile_field_data')
+        ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+        : '';
+    $surname = function_exists('bp_get_profile_field_data')
+        ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+        : '';
+    $email = get_userdata($user_id) ? get_userdata($user_id)->user_email : '';
+
+    $date_now        = date('Y-m-d H:i:s');
+    $date_issued_unix = strtotime($date_now);
+
+    $cert_id   = $existing ? $existing->cert_id : (CISON_CURRENT_YEAR . '-' . sprintf('%05d', cison_get_next_cert_number()));
+    $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id}.pdf";
+    $secret_token = wp_generate_password(12, false);
+
+    $cutoff_date_to_store = ($member_type === 'transiting')
+        ? date('Y-m-d', $date_issued_unix)
+        : $applied_cutoff;
+
+    if ($existing) {
+        $upd = $wpdb->update(
+            $table,
+            [
+                'certificate_path' => $cert_path,
+                'date_issued'      => $date_issued_unix,
+                'secret_token'     => $secret_token,
+                'last_updated'     => time(),
+                'firstname'        => $firstname,
+                'middlename'       => $middlename,
+                'surname'          => $surname,
+                'email'            => $email,
+                'member_type'      => $member_type,
+                'cutoff_date'      => $cutoff_date_to_store,
+            ],
+            ['user_id' => $user_id],
+            ['%s','%d','%s','%d','%s','%s','%s','%s','%s','%s'],
+            ['%d']
+        );
+        if ($upd === false) {
+            error_log("CISON: failed to update certificate row for user {$user_id}: " . $wpdb->last_error);
+            return false;
+        }
+    } else {
+        $ins = $wpdb->insert(
+            $table,
+            [
+                'user_id'         => $user_id,
+                'member_id'       => $member_id,
+                'cert_id'         => $cert_id,
+                'certificate_path'=> $cert_path,
+                'date_issued'     => $date_issued_unix,
+                'secret_token'    => $secret_token,
+                'last_updated'    => time(),
+                'firstname'       => $firstname,
+                'middlename'      => $middlename,
+                'surname'         => $surname,
+                'email'           => $email,
+                'member_type'     => $member_type,
+                'cutoff_date'     => $cutoff_date_to_store,
+            ],
+            ['%d','%s','%s','%s','%d','%s','%d','%s','%s','%s','%s','%s','%s']
+        );
+        if ($ins === false) {
+            error_log("CISON: failed to insert certificate row for user {$user_id}: " . $wpdb->last_error);
+            return false;
+        }
+    }
+
+    // NOTE: This only updates DB. PDF creation is handled by your existing process.
+
+    return true;
+}
