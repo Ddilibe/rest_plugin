@@ -34,7 +34,6 @@ class ProductController {
             'limit'    => -1,
             'status'   => 'completed',
             'return'   => 'ids',
-            'item_id'  => 6647
         ));
 
         $customer_ids = array();
@@ -53,7 +52,7 @@ class ProductController {
             'limit'    => -1,
             'status'   => 'completed',
             'return'   => 'ids',
-            'item_id'  => 6623
+            'product'  => 6623
         ));
 
         $customer_ids = array();
