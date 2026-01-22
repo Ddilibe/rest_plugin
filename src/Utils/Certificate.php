@@ -9,7 +9,7 @@ define('CISON_CURRENT_YEAR', (int) date('Y'));
 define('CISON_PRIVATE_DIR', WP_CONTENT_DIR . '/private/');
 define('CISON_CERTIFICATE_DIR', CISON_PRIVATE_DIR . 'certificates/');
 define('CISON_CERTIFICATE_URL', content_url('/private/certificates/'));
-define('CISON_CERT_TABLE', Config::get('CISON_CERT_TABLE', ''));
+define('CISON_CERT_TABLE', 'wprx_cison_certificates');
 
 
 
@@ -298,4 +298,4 @@ function cison_create_row_for_certification($user_id) {
         return false;
     }
     return true;
-    }
+}
