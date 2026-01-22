@@ -44,7 +44,7 @@ class ProductController {
             $customer_ids[] = $order->get_customer_id();
         }
 
-        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
+        return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success']);
 
     }
 
