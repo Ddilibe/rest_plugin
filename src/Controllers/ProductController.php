@@ -40,7 +40,7 @@ class ProductController {
 
             foreach ($orders as $order_id) {
                 // $order = wc_get_order($order_id);
-                $customer_ids[] = $order->get_customer_id();
+                $customer_ids[] = ['Pig', 'ant'];
             }
 
             return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
