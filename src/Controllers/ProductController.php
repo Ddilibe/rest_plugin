@@ -29,6 +29,8 @@ class ProductController {
     }
 
     public static function get2025CisonPreconferenceParticipant() {
+        $product_id = 6647;
+        
         if (function_exists('wc_get_orders')) {
             $customer_ids = array();
             $orders = wc_get_orders(array(
@@ -37,11 +39,17 @@ class ProductController {
                 'return'   => 'ids',
             ));
 
-
-            foreach ($orders as $order_id) {
-                $order = wc_get_order($order_id);
-                $customer_ids[] = ['Pig', 'ant'];
-            }
+            global $wpdb;
+            $results = $wpdb->get_results( $wpdb->prepare(
+                "SELECT DISTINCT pm.meta_value AS email FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta im
+                ON pm.post_id = im.order_item_id
+                WHERE pm.meta_key = '_billing_email'
+                AND im.meta_key IN ('_product_id', '_variation_id')
+                AND im.meta_value = %d
+                AND pm.post_id IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_customer_user' AND meta_value != 0)",
+                $product_id
+            ) );
 
             return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
         }
