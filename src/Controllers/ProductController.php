@@ -44,7 +44,8 @@ class ProductController {
         $has_bought = wc_customer_bought_product('', $user_id, $product_id);
 
         return rest_ensure_response([
-            'member_id' => $member_id,
+            'member_id' => $user_id,
+            'product_id' => $product_id
             'has_bought' => $has_bought,
             'status' => 'success'
         ], 200);
