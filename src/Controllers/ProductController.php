@@ -45,7 +45,7 @@ class ProductController {
 
         return rest_ensure_response([
             'member_id' => $user_id,
-            'product_id' => $product_id
+            'product_id' => $product_id,
             'has_bought' => $has_bought,
             'status' => 'success'
         ], 200);
