@@ -29,21 +29,23 @@ class ProductController {
     }
 
     public static function get2025CisonPreconferenceParticipant() {
+        if (function_exists('wc_get_orders')) {
+            $customer_ids = array();
+            $orders = wc_get_orders(array(
+                'limit'    => -1,
+                'status'   => 'completed',
+                'return'   => 'ids',
+            ));
 
-        $orders = wc_get_orders(array(
-            'limit'    => -1,
-            'status'   => 'completed',
-            'return'   => 'ids',
-        ));
 
-        $customer_ids = array();
+            // foreach ($orders as $order_id) {
+            //     $order = wc_get_order($order_id);
+            //     $customer_ids[] = $order->get_customer_id();
+            // }
 
-        // foreach ($orders as $order_id) {
-        //     $order = wc_get_order($order_id);
-        //     $customer_ids[] = $order->get_customer_id();
-        // }
-
-        return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
+            return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
+        }
+        return new WP_Error("no_fun", "wc_get_orders function is inexsistent", ['status'=>404]);
 
     }
 
