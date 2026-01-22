@@ -28,72 +28,22 @@ class ProductController {
 
     }
 
-    public static function get2025CisonPreconferenceParticipant() {
-        global $wpdb;
-        $product_id = 6647;
+    public static function checkWhetherProductWasPurchasedByUser(WP_REST_REQUEST $request) {
 
-        if (function_exists('wc_get_orders')) {
-            $customer_ids = array();
-            $orders = wc_get_orders(array(
-                'limit'    => -1,
-                'status'   => 'completed',
-                'return'   => 'ids',
-            ));
+        $body = $request->get_json_params();
+        $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
+        $product_id = isset($body['user_id']) ?intval($body['product_id']) : NAN;
 
-            $results = $wpdb->get_results( $wpdb->prepare(
-                "SELECT DISTINCT pm.meta_value AS email FROM {$wpdb->postmeta} pm
-                INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta im
-                ON pm.post_id = im.order_item_id
-                WHERE pm.meta_key = '_billing_email'
-                AND im.meta_key IN ('_product_id', '_variation_id')
-                AND im.meta_value = %d
-                AND pm.post_id IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_customer_user' AND meta_value != 0)",
-                $product_id
-            ) );
-
-            $customer_ids[] = $results;
-
-            return rest_ensure_response(['data'=>$customer_ids, 'status'=>'success'], 200);
+        if (!$user_id | $product_id === NAN) {
+            return new WP_Error('not_found', 'Member ID not found', ['status' => 404]);
         }
-        return new WP_Error("no_fun", "wc_get_orders function is inexsistent", ['status'=>404]);
+        $has_bought = wc_customer_bought_product('', $user_id, $product_id);
+
+        return rest_ensure_response([
+            'member_id' => $member_id,
+            'has_bought' => $has_bought,
+            'status' => 'success'
+        ], 200);
 
     }
-
-    public static function get2025CisonConferenceParticipantsOnSite() {
-        $orders = wc_get_orders(array(
-            'limit'    => -1,
-            'status'   => 'completed',
-            'return'   => 'ids',
-            'product'  => 6623
-        ));
-
-        $customer_ids = array();
-
-        foreach ($orders as $order_id) {
-            $order = wc_get_order($order_id);
-            $customer_ids[] = ["order" => $order];
-        }
-
-        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
-
-    }
-
-    public static function get2025CisonConferenceParticipantsOnline() {
-        $orders = wc_get_orders(array(
-            'limit'    => -1,
-            'status'   => 'completed',
-            'return'   => 'ids',
-            'item_id'  => 6625
-        ));
-
-        $customer_ids = array();
-
-        foreach ($orders as $order_id) {
-            $order = wc_get_order($order_id);
-            $customer_ids[] = $order->get_customer_id();
-        }
-
-        return rest_ensure_response(['data'=>array_unique(array_filter($customer_ids)), 'status'=>'success']);
-    }   
-
 }

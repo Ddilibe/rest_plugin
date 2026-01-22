@@ -17,19 +17,9 @@ class ProductRoute {
             "callback" => [ProductController::class, 'getAllProducts'],
             "permission_callback" => [Auth::class, 'jwt']
         ]);
-        register_rest_route($part_a, '/2025-cison-preconference-participants', [
+        register_rest_route($part_a, '/bought-product', [
             "methods" => "GET",
-            "callback" => [ProductController::class, 'get2025CisonPreconferenceParticipant'],
-            "permission_callback" => [Auth::class, 'jwt']
-        ]);
-        register_rest_route($part_a, '/2025-cison-conference-participants-onsite', [
-            "methods" => "GET",
-            "callback" => [ProductController::class, 'get2025CisonConferenceParticipantsOnSite'],
-            "permission_callback" => [Auth::class, 'jwt']
-        ]);
-        register_rest_route($part_a, '/2025-cison-conference-participants-online', [
-            "methods"=>"GET",
-            'callback' => [ProductController::class, 'get2025CisonConferenceParticipantsOnline'],
+            "callback" => [ProductController::class, 'checkWhetherProductWasPurchasedByUser'],
             "permission_callback" => [Auth::class, 'jwt']
         ]);
     }
