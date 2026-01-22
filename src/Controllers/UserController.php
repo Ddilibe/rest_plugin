@@ -309,5 +309,17 @@ class UserController
         return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
     }
 
+    public static function getUserIDWithMemberId(WP_REST_REQUEST $request) {
+        global  $wpdb;
 
+        $body = $request->get_json_params();
+        $member_id = isset($body['member_id']) ? sanitize_text_field($body['member_id']) : '';
+
+        $member_id_response = bp_get_profile_field_data([
+                'field'   => 894,]);
+        if (!$member_id_response) {
+            return rest_ensure_response(['data' => $member_id_response, 'status'=>'success'], 200);
+        }
+        return new WP_Error("invalid_id", "member ID is required", ['status' => 400]);
+    }
 }
