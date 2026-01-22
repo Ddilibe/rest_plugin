@@ -318,16 +318,29 @@ class UserController
     }
 
     public static function getUserIDWithMemberId(WP_REST_REQUEST $request) {
-        global  $wpdb;
+        global $wpdb;
 
         $body = $request->get_json_params();
         $member_id = isset($body['member_id']) ? sanitize_text_field($body['member_id']) : '';
 
-        $member_id_response = bp_get_profile_field_data([
-                'field'   => 894,]);
-        if ($member_id_response) {
-            return rest_ensure_response(['data' => $member_id_response, 'status'=>'success'], 200);
+        if (empty($member_id)) {
+            return new WP_Error("invalid_id", "Member ID is required", ['status' => 400]);
         }
-        return new WP_Error("invalid_id", "member ID is required", ['status' => 400]);
+
+        $table_name = $wpdb->prefix . 'bp_xprofile_data';
+        $user_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT user_id FROM {$table_name} WHERE field_id = %d AND value = %s LIMIT 1",
+            894,
+            $member_id
+        ));
+
+        if ($user_id) {
+            return rest_ensure_response([
+                'user_id' => (int)$user_id, 
+                'status'  => 'success'
+            ], 200);
+        }
+
+        return new WP_Error("not_found", "No user found with that Member ID", ['status' => 404]);
     }
 }
