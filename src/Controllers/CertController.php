@@ -51,13 +51,13 @@ class CertController {
             $user_id
         ));
 
-        if (!empty($row)) {
-            cison_create_row_for_certification($user_id);
-        }
+        // if (!empty($row)) {
+        //     cison_create_row_for_certification($user_id);
+        // }
 
-        if (file_exists($row->certificate_path)) {
-            return new WP_Error("certificate_exists", "Certificate already exists", ['status' => 400]);
-        }
+        // if (file_exists($row->certificate_path)) {
+        //     return new WP_Error("certificate_exists", "Certificate already exists", ['status' => 400]);
+        // }
 
         $is_transiting = function_exists('bp_get_profile_field_data')
             ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $user_id]) === 'Yes')
