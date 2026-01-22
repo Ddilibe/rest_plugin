@@ -33,7 +33,7 @@ class ProductController {
         $orders = wc_get_orders(array(
             'limit'    => -1,
             'status'   => 'completed',
-            'return'   => 'ids',
+            'return'   => 'object',
             'item_id'  => 6647
         ));
 
