@@ -333,7 +333,6 @@ class UserController
 
         return new WP_Error("not_found", "No user found with that Member ID", ['status' => 404]);
     }
-
     public static function getValidUsers() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
@@ -341,122 +340,159 @@ class UserController
 
         $all_data = array();
 
-        $members = $wpdb->get_results("SELECT * FROM {$table_name} INNER JOIN {$cert_table} ON {$table_name}.ID = {$cert_table}.user_id;");
+        // Fix: Added error handling for query
+        $members = $wpdb->get_results(
+            "SELECT u.*, c.* 
+            FROM {$table_name} u 
+            INNER JOIN {$cert_table} c ON u.ID = c.user_id",
+            ARRAY_A  // Return as associative array
+        );
 
-         foreach ($members as $value) {
+        if ($wpdb->last_error) {
+            error_log("CISON: Database error in getValidUsers: " . $wpdb->last_error);
+            return new WP_Error('db_error', 'Database query failed', ['status' => 500]);
+        }
+
+        foreach ($members as $value) {
             $user_id = (int) $value["ID"];
+            
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
             
             $is_transiting = bp_get_profile_field_data([
                 'field'   => 1595,
-                'user_id'=> $user_id,
-                ]) === 'Yes';
+                'user_id' => $user_id,
+            ]) === 'Yes';
 
             $member_id = bp_get_profile_field_data([
                 'field'   => 894,
-                'user_id'=> $user_id,
+                'user_id' => $user_id,
             ]) ?: '';
 
             $phone_number = bp_get_profile_field_data([
                 'field'   => 5,
-                'user_id'=> $user_id,
-            ]);
+                'user_id' => $user_id,
+            ]) ?: '';
 
-            $firstname = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
-                : '';
-            $middlename = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
-                : '';
-            $surname = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
-                : '';
+            $firstname = bp_get_profile_field_data([
+                'field'   => 1,
+                'user_id' => $user_id
+            ]) ?: '';
+
+            $middlename = bp_get_profile_field_data([
+                'field'   => 864,
+                'user_id' => $user_id
+            ]) ?: '';
+
+            $surname = bp_get_profile_field_data([
+                'field'   => 2,
+                'user_id' => $user_id
+            ]) ?: '';
 
             $single_data = array(
-                "user_id"=> $user_id,
-                "first_name"=> $firstname,
-                "middle_name"=> $middlename,
-                "last_name"=> $surname,
-                "user_login"=> $value["user_login"],
-                "user_email"=> $value["user_email"],
-                "joined_date" => $value["user_registered"],
-                "phone_number"=> $phone_number,
-                "display_name"=> $value["display_name"],
-                "member_id"=> $member_id,                
-                "is_transiting" => $is_transiting ? true : false,
+                "user_id"       => $user_id,
+                "first_name"    => $firstname,
+                "middle_name"   => $middlename,
+                "last_name"     => $surname,
+                "user_login"    => $value["user_login"],
+                "user_email"    => $value["user_email"],
+                "joined_date"   => $value["user_registered"],
+                "phone_number"  => $phone_number,
+                "display_name"  => $value["display_name"],
+                "member_id"     => $member_id,
+                "is_transiting" => $is_transiting,
             );
 
             $all_data[] = $single_data;
         }
 
-        $response = ["data"=>$all_data, "status"=>"success"];
-
-        return rest_ensure_response($response,200);
+        return rest_ensure_response([
+            "data"   => $all_data,
+            "status" => "success",
+            "count"  => count($all_data)
+        ], 200);
     }
 
-    public static function getInalidUsers() {
+    public static function getInvalidUsers() {  // Fixed typo: "Inalid" -> "Invalid"
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
         $cert_table = CISON_CERT_TABLE;
 
         $all_data = array();
 
-        $members = $wpdb->get_results("SELECT * FROM {$table_name}
-LEFT JOIN {$cert_table} ON {$table_name}.ID = {$cert_table}.user_id
-WHERE {$cert_table}.user_id IS NULL;");
+        // Fix: Improved query formatting and added error handling
+        $members = $wpdb->get_results(
+            "SELECT u.*, c.user_id as cert_user_id 
+            FROM {$table_name} u 
+            LEFT JOIN {$cert_table} c ON u.ID = c.user_id 
+            WHERE c.user_id IS NULL",
+            ARRAY_A  // Return as associative array
+        );
 
-         foreach ($members as $value) {
+        if ($wpdb->last_error) {
+            error_log("CISON: Database error in getInvalidUsers: " . $wpdb->last_error);
+            return new WP_Error('db_error', 'Database query failed', ['status' => 500]);
+        }
+
+        foreach ($members as $value) {
             $user_id = (int) $value["ID"];
+            
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
             
             $is_transiting = bp_get_profile_field_data([
                 'field'   => 1595,
-                'user_id'=> $user_id,
-                ]) === 'Yes';
+                'user_id' => $user_id,
+            ]) === 'Yes';
 
             $member_id = bp_get_profile_field_data([
                 'field'   => 894,
-                'user_id'=> $user_id,
+                'user_id' => $user_id,
             ]) ?: '';
 
             $phone_number = bp_get_profile_field_data([
                 'field'   => 5,
-                'user_id'=> $user_id,
-            ]);
+                'user_id' => $user_id,
+            ]) ?: '';
 
-            $firstname = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
-                : '';
-            $middlename = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
-                : '';
-            $surname = function_exists('bp_get_profile_field_data')
-                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
-                : '';
+            $firstname = bp_get_profile_field_data([
+                'field'   => 1,
+                'user_id' => $user_id
+            ]) ?: '';
+
+            $middlename = bp_get_profile_field_data([
+                'field'   => 864,
+                'user_id' => $user_id
+            ]) ?: '';
+
+            $surname = bp_get_profile_field_data([
+                'field'   => 2,
+                'user_id' => $user_id
+            ]) ?: '';
 
             $single_data = array(
-                "user_id"=> $user_id,
-                "first_name"=> $firstname,
-                "middle_name"=> $middlename,
-                "last_name"=> $surname,
-                "user_login"=> $value["user_login"],
-                "user_email"=> $value["user_email"],
-                "joined_date" => $value["user_registered"],
-                "phone_number"=> $phone_number,
-                "display_name"=> $value["display_name"],
-                "member_id"=> $member_id,                
-                "is_transiting" => $is_transiting ? true : false,
+                "user_id"       => $user_id,
+                "first_name"    => $firstname,
+                "middle_name"   => $middlename,
+                "last_name"     => $surname,
+                "user_login"    => $value["user_login"],
+                "user_email"    => $value["user_email"],
+                "joined_date"   => $value["user_registered"],
+                "phone_number"  => $phone_number,
+                "display_name"  => $value["display_name"],
+                "member_id"     => $member_id,
+                "is_transiting" => $is_transiting,
             );
 
             $all_data[] = $single_data;
         }
 
-        $response = ["data"=>$all_data, "status"=>"success"];
-
-        return rest_ensure_response($response,200);
+        return rest_ensure_response([
+            "data"   => $all_data,
+            "status" => "success",
+            "count"  => count($all_data)
+        ], 200);
     }
 }
