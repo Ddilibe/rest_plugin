@@ -333,4 +333,134 @@ class UserController
 
         return new WP_Error("not_found", "No user found with that Member ID", ['status' => 404]);
     }
+
+    public static function getValidUsers() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
+        $cert_table = CISON_CERT_TABLE;
+
+        $all_data = array();
+
+        $members = $wpdb->get_results("SELECT * FROM {$table_name} INNER JOIN {$cert_table} ON {$table_name}.ID = {$cert_table}.user_id;");
+
+         foreach ($members as $value) {
+            $user_id = (int) $value["ID"];
+            if (!function_exists('bp_get_profile_field_data')) {
+                continue;
+            }
+            
+            $is_transiting = bp_get_profile_field_data([
+                'field'   => 1595,
+                'user_id'=> $user_id,
+                ]) === 'Yes';
+
+            $member_id = bp_get_profile_field_data([
+                'field'   => 894,
+                'user_id'=> $user_id,
+            ]) ?: '';
+
+            $phone_number = bp_get_profile_field_data([
+                'field'   => 5,
+                'user_id'=> $user_id,
+            ]);
+
+            $firstname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+                : '';
+            $middlename = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+                : '';
+            $surname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+                : '';
+            $paid_fees = cison_get_paid_fees($user_id);
+
+            $single_data = array(
+                "user_id"=> $user_id,
+                "first_name"=> $firstname,
+                "middle_name"=> $middlename,
+                "last_name"=> $surname,
+                "user_login"=> $value["user_login"],
+                "user_email"=> $value["user_email"],
+                "joined_date" => $value["user_registered"],
+                "phone_number"=> $phone_number,
+                "display_name"=> $value["display_name"],
+                "member_id"=> $member_id,                
+                "paid_fees" => $paid_fees,
+                "is_transiting" => $is_transiting ? true : false,
+            );
+
+            $all_data[] = $single_data;
+        }
+
+        $response = ["data"=>$all_data, "status"=>"success"];
+
+        return rest_ensure_response($response,200);
+    }
+
+    public static function getInalidUsers() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
+        $cert_table = CISON_CERT_TABLE;
+
+        $all_data = array();
+
+        $members = $wpdb->get_results("SELECT * FROM {$table_name}
+LEFT JOIN {$cert_table} ON {$table_name}.ID = {$cert_table}.user_id
+WHERE {$cert_table}.user_id IS NULL;");
+
+         foreach ($members as $value) {
+            $user_id = (int) $value["ID"];
+            if (!function_exists('bp_get_profile_field_data')) {
+                continue;
+            }
+            
+            $is_transiting = bp_get_profile_field_data([
+                'field'   => 1595,
+                'user_id'=> $user_id,
+                ]) === 'Yes';
+
+            $member_id = bp_get_profile_field_data([
+                'field'   => 894,
+                'user_id'=> $user_id,
+            ]) ?: '';
+
+            $phone_number = bp_get_profile_field_data([
+                'field'   => 5,
+                'user_id'=> $user_id,
+            ]);
+
+            $firstname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+                : '';
+            $middlename = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+                : '';
+            $surname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+                : '';
+            $paid_fees = cison_get_paid_fees($user_id);
+
+            $single_data = array(
+                "user_id"=> $user_id,
+                "first_name"=> $firstname,
+                "middle_name"=> $middlename,
+                "last_name"=> $surname,
+                "user_login"=> $value["user_login"],
+                "user_email"=> $value["user_email"],
+                "joined_date" => $value["user_registered"],
+                "phone_number"=> $phone_number,
+                "display_name"=> $value["display_name"],
+                "member_id"=> $member_id,                
+                "paid_fees" => $paid_fees,
+                "is_transiting" => $is_transiting ? true : false,
+            );
+
+            $all_data[] = $single_data;
+        }
+
+        $response = ["data"=>$all_data, "status"=>"success"];
+
+        return rest_ensure_response($response,200);
+    }
 }
