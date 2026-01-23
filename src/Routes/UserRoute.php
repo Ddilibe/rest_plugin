@@ -66,7 +66,7 @@ class UserRoute {
         ]);
         register_rest_route('cison/v1', '/invalidusers', [
             'methods'=>'GET',
-            'callback' => [UserController::class, 'getInalidUsers'],
+            'callback' => [UserController::class, 'getInvalidUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
     }
