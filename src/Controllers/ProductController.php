@@ -51,4 +51,35 @@ class ProductController {
         ], 200);
 
     }
+
+    public static function getOrders() {
+        $args = array(
+            'limit'  => -1,
+            'status' => array('wc-processing', 'wc-completed'), 
+            'return' => 'objects',
+        );
+
+        $orders = wc_get_orders($args);
+        $data   = array();
+
+        foreach ($orders as $order) {
+            
+            $purchased_product_ids = array();
+            foreach ($order->get_items() as $item_id => $item) {
+                $purchased_product_ids[] = $item->get_product_id();
+            }
+
+            $data[] = array(
+                'order_id'     => $order->get_id(),
+                'first_name'   => $order->get_billing_first_name(),
+                'surname'      => $order->get_billing_last_name(),
+                'email'        => $order->get_billing_email(),
+                'product_ids'  => $purchased_product_ids,
+                'total'        => $order->get_total(),
+                'date_paid'    => $order->get_date_paid() ? $order->get_date_paid()->date('Y-m-d') : 'N/A',
+            );
+        }
+
+        return rest_ensure_response($data);
+    }
 }

@@ -27,5 +27,29 @@ class CertRoute {
             'callback' => [CertController::class, 'singleCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+
+        register_rest_route($part_a, '/add-2025-conference', [
+            'methods' => 'POST',
+            'callback' => [CertController::class, 'add2025Conference'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+
+        register_rest_route($part_a, '/add-2025-preconference', [
+            'methods' => 'POST',
+            'callback' => [CertController::class, 'add2025PreConference'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+
+        register_rest_route($part_a, '/get-2025-preconference', [
+            'methods' => 'GET',
+            'callback' => [CertController::class, 'get2025Preconference'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+
+        register_rest_route($part_a, '/get-2025-conference', [
+            'methods' => 'GET',
+            'callback' => [CertController::class, 'get2025Conference'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }

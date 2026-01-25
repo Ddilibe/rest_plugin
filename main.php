@@ -211,3 +211,14 @@ add_filter('rest_authentication_errors', function ($result) {
     }
     return $result;
 }, 999); // Very high priority to override BuddyBoss
+
+require_once plugin_dir_path( __FILE__ ) . 'src/Models/Conference_Model_2025.php';
+
+require_once plugin_dir_path( __FILE__ ) . 'src/Models/PreConference_Model_2025.php';
+
+add_action('init', function () {
+
+    SRC\Models\create_preconference_model_2025();
+    SRC\Models\create_conference_model_2025();
+    
+}, 1);

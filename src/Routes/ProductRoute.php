@@ -22,5 +22,10 @@ class ProductRoute {
             "callback" => [ProductController::class, 'checkWhetherProductWasPurchasedByUser'],
             "permission_callback" => [Auth::class, 'jwt']
         ]);
+        register_rest_route($part_a, '/all-orders', [
+            "methods" => "GET",
+            "callback" => [ProductController::class, 'getOrders'],
+            "permission_callback" => [Auth::class, 'jwt']
+        ]);
     }
 }
