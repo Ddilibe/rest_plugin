@@ -63,23 +63,30 @@ class ProductController {
         $data   = array();
 
         foreach ($orders as $order) {
-            
-            // $purchased_product_ids = array();
-            // foreach ($order->get_items() as $item_id => $item) {
-            //     $purchased_product_ids[] = $item->get_product_id();
-            // }
+            $items = array();
+            foreach ($order->get_items() as $item_id => $item) {
+                $items[] = array(
+                    'product_id'   => $item->get_product_id(),
+                    'product_name' => $item->get_name(),
+                    'quantity'     => $item->get_quantity(),
+                    'total'        => $item->get_total(),
+                );
+            }
 
-            // $data[] = array(
-            //     'order_id'     => $order->get_id(),
-            //     'first_name'   => $order->get_billing_first_name(),
-            //     'surname'      => $order->get_billing_last_name(),
-            //     'email'        => $order->get_billing_email(),
-            //     'product_ids'  => $purchased_product_ids,
-            //     'total'        => $order->get_total(),
-            //     'date_paid'    => $order->get_date_paid() ? $order->get_date_paid()->date('Y-m-d') : 'N/A',
-            // );
-
-            $data[] = $order;
+            $data[] = array(
+                'order_id'        => $order->get_id(),
+                'first_name'      => $order->get_billing_first_name(),
+                'surname'         => $order->get_billing_last_name(),
+                'email'           => $order->get_billing_email(),
+                'phone'           => $order->get_billing_phone(),
+                'items'           => $items,
+                'total'           => $order->get_total(),
+                'status'          => $order->get_status(),
+                'date_paid'       => $order->get_date_paid() ? $order->get_date_paid()->date('Y-m-d H:i:s') : null,
+                'payment_method'  => $order->get_payment_method_title(),
+                'transaction_id'  => $order->get_transaction_id(),
+                'billing_state'   => $order->get_billing_state(),
+            );
         }
 
         return rest_ensure_response($data);
