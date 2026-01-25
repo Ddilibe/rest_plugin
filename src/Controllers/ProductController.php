@@ -57,12 +57,18 @@ class ProductController {
             'limit'  => -1,
             'status' => array('wc-processing', 'wc-completed'), 
             'return' => 'objects',
+            'type'   => 'shop_order', // This excludes refunds!
         );
 
         $orders = wc_get_orders($args);
         $data   = array();
 
         foreach ($orders as $order) {
+            // Double-check it's not a refund
+            if ($order instanceof \WC_Order_Refund) {
+                continue;
+            }
+            
             $items = array();
             foreach ($order->get_items() as $item_id => $item) {
                 $items[] = array(
@@ -71,6 +77,11 @@ class ProductController {
                     'quantity'     => $item->get_quantity(),
                     'total'        => $item->get_total(),
                 );
+            }
+
+            $date_paid = null;
+            if ($order->get_date_paid()) {
+                $date_paid = $order->get_date_paid()->format('Y-m-d H:i:s');
             }
 
             $data[] = array(
@@ -82,7 +93,7 @@ class ProductController {
                 'items'           => $items,
                 'total'           => $order->get_total(),
                 'status'          => $order->get_status(),
-                'date_paid'       => $order->get_date_paid() ? $order->get_date_paid()->date('Y-m-d H:i:s') : null,
+                'date_paid'       => $date_paid,
                 'payment_method'  => $order->get_payment_method_title(),
                 'transaction_id'  => $order->get_transaction_id(),
                 'billing_state'   => $order->get_billing_state(),
