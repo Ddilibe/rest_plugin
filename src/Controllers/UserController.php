@@ -155,6 +155,7 @@ class UserController
                     "first_name"=> $firstname,
                     "middle_name"=> $middlename,
                     "last_name"=> $surname,
+                    "phone_number"=> $phone_number,
                     "has_certificate" => $has_certificate,
                     "certificate_validity" => $certificate_validity
                 );
