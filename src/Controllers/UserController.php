@@ -134,7 +134,7 @@ class UserController
         $certificates = $wpdb->get_results("SELECT * FROM wprx_cison_certificates", ARRAY_A);
 
         foreach ($certificates as $value) {
-            $user_id = (int) $value["ID"];
+            $user_id = (int) $value["user_id"];
 
             $firstname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
