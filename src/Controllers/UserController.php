@@ -133,18 +133,8 @@ class UserController
         $all_users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
 
-        foreach ($all_users as $value) {
+        foreach ($certificates as $value) {
             $user_id = (int) $value["ID"];
-            
-            $certificate_validity=cison_preview_user_eligibility($user_id);
-
-            $has_certificate = array_filter($certificates, function ($certificate) {
-                return $certificate["user_id"] === $user_id;
-            });
-
-            if ($has_certificate === 0) {
-                continue;
-            }
 
             $firstname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
@@ -155,6 +145,10 @@ class UserController
             $surname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
+            $phone_number = function_exists('bp_get_profile_field_data') ?bp_get_profile_field_data([
+                'field'   => 5,
+                'user_id' => $user_id,
+            ]) : '';
 
             $single_data = array(
                     "user_id"=> $user_id,
