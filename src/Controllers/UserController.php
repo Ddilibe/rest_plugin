@@ -131,7 +131,7 @@ class UserController
         $all_data = array();
 
         $all_users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
-        $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
+        $certificates = $wpdb->get_results("SELECT * FROM wprx_cison_certificates", ARRAY_A);
 
         foreach ($certificates as $value) {
             $user_id = (int) $value["ID"];
