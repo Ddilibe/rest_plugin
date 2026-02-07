@@ -43,13 +43,13 @@ class CertRoute {
         register_rest_route($part_a, '/get-2025-preconference', [
             'methods' => 'GET',
             'callback' => [CertController::class, 'get2025Preconference'],
-            'permission_callback' => [Auth::class, 'jwt'],
+            'permission_callback' => '__return_true',
         ]);
 
         register_rest_route($part_a, '/get-2025-conference', [
             'methods' => 'GET',
             'callback' => [CertController::class, 'get2025Conference'],
-            'permission_callback' => [Auth::class, 'jwt'],
+            'permission_callback' => '__return_true',
         ]);
     }
 }

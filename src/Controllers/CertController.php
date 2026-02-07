@@ -180,7 +180,7 @@ class CertController {
         if (empty($body['email'])) {
             return new WP_Error('invalid_data', 'Email is required', ['status' => 400]);
         }
-        $email = $body['email'];
+        $email = sanitize_email($body['email']);
         $table_name = $wpdb->prefix . 'cison_conference_2025';
 
         $existing = $wpdb->get_row(
@@ -198,6 +198,16 @@ class CertController {
         if (!empty($existing)) {
             return new WP_Error('already_exists', 'Record already exists for this email', ['status' => 400]);
         }
+        
+        $filename = $body['cert_name'];
+        $file_url = content_url('private/preconference/' . $filename);
+        // $file_path = WP_CONTENT_DIR . '/private/preconference/' . $filename;
+
+        $cert_id = uniqid('cert-', true);
+    
+        $file_path = WP_CONTENT_DIR . '/private/conference/' . $filename;
+    
+        $cert_url = rest_url('api/v1/certificate/' . $cert_id);
 
         $saved = $wpdb->insert(
             $table_name,
@@ -205,7 +215,7 @@ class CertController {
                 'order_id'         => $body['order_id'],
                 'member_id'        => $body['member_id'],
                 'first_name'       => $body['first_name'],
-                'last_name'        => $body['last_name'],
+                'last_name'        => $body['surname'],
                 'item_name'        => $body['item_name'],
                 'item_price'       => $body['item_price'],
                 'order_total'      => $body['order_total'],
@@ -217,6 +227,7 @@ class CertController {
                 'transaction_id'   => $body['transaction_id'],
                 'order_link'       => $body['order_link'],
                 'billing_state'    => $body['billing_state'],
+                'cert_url'         => $cert_url,
                 'last_updated'     => time(),
             ],
             ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
@@ -255,13 +266,17 @@ class CertController {
             return new WP_Error('already_exists', 'Record already exists for this email', ['status' => 400]);
         }
 
+        $filename = $body['cert_name'];
+        $file_url = content_url('private/preconference/' . $filename);
+        // $file_path = WP_CONTENT_DIR . '/private/preconference/' . $filename;
+
         $saved = $wpdb->insert(
             $table_name,
             [
                 'order_id'         => $body['order_id'],
                 'member_id'        => $body['member_id'],
                 'first_name'       => $body['first_name'],
-                'last_name'        => $body['last_name'],
+                'last_name'        => $body['surname'],
                 'item_name'        => $body['item_name'],
                 'item_price'       => $body['item_price'],
                 'order_total'      => $body['order_total'],
@@ -273,6 +288,7 @@ class CertController {
                 'transaction_id'   => $body['transaction_id'],
                 'order_link'       => $body['order_link'],
                 'billing_state'    => $body['billing_state'],
+                'cert_url'         => $file_url,
                 'last_updated'     => time(),
             ],
             ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
@@ -293,16 +309,16 @@ class CertController {
         global $wpdb;
         $table_name = $wpdb->prefix . 'cison_preconference_2025';
 
-        $response = $wpdb->get_results("SELECT * from {$table_name};");
+        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, member_id, cert_url from {$table_name};");
 
         return rest_ensure_response($response);
     }
-    
+
     public static function get2025Conference() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'cison_conference_2025';
 
-        $response = $wpdb->get_results("SELECT * from {$table_name};");
+        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, member_id, cert_url from {$table_name};");
 
         return rest_ensure_response($response);
     }

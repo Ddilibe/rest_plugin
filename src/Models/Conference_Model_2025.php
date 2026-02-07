@@ -53,6 +53,24 @@ function create_conference_model_2025() {
         );
     }
 
+    $cert_url_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = %s 
+            AND TABLE_NAME = %s 
+            AND COLUMN_NAME = 'cert_url'",
+            DB_NAME,
+            $table_name
+        )
+    );
+    
+    if (empty($cert_url_exists)) {
+        $wpdb->query(
+            "ALTER TABLE {$table_name} 
+            ADD COLUMN cert_url varchar(255) DEFAULT '' AFTER billing_state"
+        );
+    }
+
 }
 
 register_activation_hook(__FILE__, 'create_conference_model_2025');
