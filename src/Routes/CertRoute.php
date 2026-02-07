@@ -51,5 +51,12 @@ class CertRoute {
             'callback' => [CertController::class, 'get2025Conference'],
             'permission_callback' => '__return_true',
         ]);
+
+        register_rest_route($part_a, '/drop-conference-tables', [
+            'methods' => 'GET',
+            'callback' => [CertController::class, 'dropTables'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+    
     }
 }

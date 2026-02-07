@@ -309,7 +309,7 @@ class CertController {
         global $wpdb;
         $table_name = $wpdb->prefix . 'cison_preconference_2025';
 
-        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, member_id, cert_url from {$table_name};");
+        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, cert_url from {$table_name};");
 
         return rest_ensure_response($response);
     }
@@ -318,8 +318,19 @@ class CertController {
         global $wpdb;
         $table_name = $wpdb->prefix . 'cison_conference_2025';
 
-        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, member_id, cert_url from {$table_name};");
+        $response = $wpdb->get_results("SELECT id, first_name, last_name, email, cert_url from {$table_name};");
 
         return rest_ensure_response($response);
+    }
+    public static function dropTables() {
+        global $wpdb;
+        
+        $preconf_table = $wpdb->prefix . 'cison_preconference_2025';
+        $conf_table = $wpdb->prefix . 'cison_conference_2025';
+        
+        $wpdb->query("DROP TABLE IF EXISTS {$preconf_table}");
+        $wpdb->query("DROP TABLE IF EXISTS {$conf_table}");
+        
+        return rest_ensure_response(['message' => 'Tables dropped successfully']);
     }
 }
