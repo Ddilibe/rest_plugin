@@ -200,7 +200,7 @@ class CertController {
         }
         
         $filename = $body['cert_name'];
-        $file_url = content_url('private/preconference/' . $filename);
+        $file_url = content_url('private/conference/' . $filename);
         // $file_path = WP_CONTENT_DIR . '/private/preconference/' . $filename;
 
         $cert_id = uniqid('cert-', true);
@@ -227,7 +227,7 @@ class CertController {
                 'transaction_id'   => $body['transaction_id'],
                 'order_link'       => $body['order_link'],
                 'billing_state'    => $body['billing_state'],
-                'cert_url'         => $cert_url,
+                'cert_url'         => $file_url,
                 'last_updated'     => time(),
             ],
             ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
