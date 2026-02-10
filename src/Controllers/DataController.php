@@ -79,18 +79,50 @@ class DataController {
                'user_id' => $userID
             ]);
 
-     //     $name_
-     //     21 = 21
-     //        $name_276 = 276
-     //        $name_25 = 25
-     //        $name_24 = 24
-     //        $name_23 = 23
-     //        $name_1425 = 1425
-     //        $name_859 = 859
-     //        $name_840 = 840
-     //        $name_839 = 839
-     //        $name_836 = 836
-     //        $name_835 = 835
+          $name_21 = bp_get_profile_field_data([
+               'field' => 21,
+               'user_id'=> $userID,
+               ]);
+          $name_276 = bp_get_profile_field_data([
+               'field' => 276,
+               'user_id'=> $userID,
+               ]);
+          $name_25 = bp_get_profile_field_data([
+               'field' => 25,
+               'user_id'=> $userID,
+               ]);
+          $name_24 = bp_get_profile_field_data([
+               'field' => 24,
+               'user_id'=> $userID,
+               ]);
+          $name_23 = bp_get_profile_field_data([
+               'field' => 23,
+               'user_id'=> $userID,
+               ]);
+          $name_1425 = bp_get_profile_field_data([
+               'field' => 1425,
+               'user_id'=> $userID,
+               ]);
+          $name_859 = bp_get_profile_field_data([
+               'field' => 859,
+               'user_id'=> $userID,
+               ]);
+          $name_840 = bp_get_profile_field_data([
+               'field' => 840,
+               'user_id'=> $userID,
+               ]);
+          $name_839 = bp_get_profile_field_data([
+               'field' => 839,
+               'user_id'=> $userID,
+               ]);
+          $name_836 = bp_get_profile_field_data([
+               'field' => 836,
+               'user_id'=> $userID,
+               ]);
+          $name_835 = bp_get_profile_field_data([
+               'field' => 835,
+               'user_id'=> $userID,
+               ]);
 
      //      $name_
      //      2 = 2
@@ -281,7 +313,18 @@ class DataController {
                 "phone_number" => $name_561,
                 "display_name" => $name_5,
                 "member_id" => $name_1595,
-                "is_transiting" => $name_917
+                "is_transiting" => $name_917,
+               "name_21" => $name_21,
+               "name_276" => $name_276,
+               "name_25" => $name_25,
+               "name_24" => $name_24,
+               "name_23" => $name_23,
+               "name_1425" => $name_1425,
+               "name_859" => $name_859,
+               "name_840" => $name_840,
+               "name_839" => $name_839,
+               "name_836" => $name_836,
+               "name_835" => $name_835,
             );
 
             $toSend[] = $single_data;
