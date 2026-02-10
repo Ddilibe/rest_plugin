@@ -59,7 +59,7 @@ class CertRoute {
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
 
-        register_rest_route('/data', '/get-all', [
+        register_rest_route('cison/v1/data', '/get-all', [
             'methods' => 'GET',
             'callback' => [DataController::class, 'allUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
