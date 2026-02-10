@@ -16,8 +16,10 @@ define('CISON_CERT_TABLE', Config::get('CISON_CERT_TABLE'));
 class DataController {
     public static function allUsers() {
         global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
         
-        $users = $wpdb->get_results("SELECT * FROM users", ARRAY_A);
+        
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
