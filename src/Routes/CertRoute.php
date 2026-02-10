@@ -2,6 +2,7 @@
 
 namespace SRC\Routes;
 
+use SRC\Controllers\DataController;
 use SRC\Controllers\CertController;
 use SRC\Middleware\Auth;
 
@@ -57,6 +58,11 @@ class CertRoute {
             'callback' => [CertController::class, 'dropTables'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
-    
+
+        register_rest_route('/data', '/get-all', [
+            'methods' => 'GET',
+            'callback' => [DataController::class, 'allUsers'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }
