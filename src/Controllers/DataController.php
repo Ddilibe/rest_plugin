@@ -21,7 +21,7 @@ class DataController {
         $toSend = array();
 
         foreach ($users as $user) {
-            $userID = $user['ID'];
+            $userID = (int)$user['ID'];
 
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
