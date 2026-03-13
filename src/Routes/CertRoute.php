@@ -67,7 +67,7 @@ class CertRoute
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
 
-        register_rest_route('cison/v1/remove-cert', [
+        register_rest_route($part_a, '/remove-cert', [
             'methods' => 'DELETE',
             'callback' => [CertController::class, 'remove_certificate'],
             'permission_callback' => [Auth::class, 'jwt'],
