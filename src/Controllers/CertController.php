@@ -379,7 +379,7 @@ class CertController
         }
 
         $result = $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$table_name} WHERE user_id = %d",
+            "DELETE FROM {$cert_table_name} WHERE user_id = %d",
             $user_id
         ));
 
