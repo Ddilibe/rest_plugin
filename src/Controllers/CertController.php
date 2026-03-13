@@ -390,12 +390,14 @@ class CertController
         ], 200);
     }
 
-    public static function list_certificates(WP_REST_REQUEST $request) {
+    public static function list_certificates(WP_REST_REQUEST $request)
+    {
         global $wpdb;
         $cert_table_name = CISON_CERT_TABLE;
-        $certificate = $wpdb->execute($wpdb->prepare(
+        $certificate = $wpdb->get_results(
             "SELECT * FROM {$cert_table_name}",
-        ));
+            ARRAY_A
+        );
         return rest_ensure_response([
             'data' => $certificate,
             'status' => 'success'
