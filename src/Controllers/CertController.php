@@ -349,7 +349,7 @@ class CertController
         $user_id = isset($params['user_id']) ? sanitize_text_field($params['user_id']) : '';
         $member_id = isset($params['member_id']) ? sanitize_text_field($params['member_id']) : '';
 
-        if (empty($user_id) || empty($member_id)) {
+        if (empty($user_id) && empty($member_id)) {
             return new WP_Error('invalid_id', 'User ID or Member ID is required', ['status' => 400]);
         }
 
