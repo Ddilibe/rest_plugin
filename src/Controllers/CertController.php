@@ -375,7 +375,7 @@ class CertController
         ));
 
         if (empty($certificate)) {
-            return new WP_Error('not_found', 'Certificate not found for this user', ['status' => 404]);
+            return new WP_Error('not_found', "Certificate not found for this user {$user_id} {$member_id}", ['status' => 404]);
         }
 
         $result = $wpdb->query($wpdb->prepare(
