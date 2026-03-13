@@ -394,11 +394,21 @@ class CertController
     {
         global $wpdb;
         $cert_table_name = CISON_CERT_TABLE;
+        $toSend = array();
+
         $certificate = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$cert_table_name}",
         ));
+        if (empty($certificate)) {
+            return new WP_Error('not_found', "No certificates found", ['status' => 404]);
+        }
+
+        foreach ($certificate as $cert) {
+            $toSend[] = $cert;
+        }
+
         return rest_ensure_response([
-            'data' => $certificate,
+            'data' => $toSend,
             'status' => 'success'
         ], 200);
     }
