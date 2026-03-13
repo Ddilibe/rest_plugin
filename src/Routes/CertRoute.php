@@ -6,10 +6,12 @@ use SRC\Controllers\DataController;
 use SRC\Controllers\CertController;
 use SRC\Middleware\Auth;
 
-class CertRoute {
-    public static function register() {
+class CertRoute
+{
+    public static function register()
+    {
         global $part_a;
-        $part_a='cison/v1/cert';
+        $part_a = 'cison/v1/cert';
 
         register_rest_route($part_a, '/next-number', [
             'methods' => 'GET',
@@ -23,7 +25,7 @@ class CertRoute {
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
 
-        register_rest_route($part_a, '/single-certificate',[
+        register_rest_route($part_a, '/single-certificate', [
             'methods' => 'GET',
             'callback' => [CertController::class, 'singleCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
@@ -62,6 +64,12 @@ class CertRoute {
         register_rest_route('cison/v1/data', '/get-all', [
             'methods' => 'GET',
             'callback' => [DataController::class, 'allUsers'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
+
+        register_rest_route('cison/v1/remove-cert', [
+            'methods' => 'DELETE',
+            'callback' => [CertController::class, 'remove_certificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
     }
