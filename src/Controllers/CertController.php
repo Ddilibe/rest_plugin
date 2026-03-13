@@ -389,4 +389,17 @@ class CertController
             'status' => 'success'
         ], 200);
     }
+
+    public static function list_certificates(WP_REST_REQUEST $request)
+    {
+        global $wpdb;
+        $cert_table_name = CISON_CERT_TABLE;
+        $certificate = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$cert_table_name}",
+        ));
+        return rest_ensure_response([
+            'data' => $certificate,
+            'status' => 'success'
+        ], 200);
+    }
 }
