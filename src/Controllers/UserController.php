@@ -96,7 +96,7 @@ class UserController
             $surname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
-            $paid_fees = cison_get_paid_fees($user_id);
+            $paid_fees = Money::cison_get_paid_fees($user_id);
 
             $single_data = array(
                 "user_id"=> $user_id,
