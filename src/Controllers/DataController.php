@@ -117,6 +117,7 @@ class DataController
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
                 }
+                $toSend[] = $user_data;
             }
         }
         return rest_ensure_response([
@@ -155,6 +156,7 @@ class DataController
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
                 }
+                $toSend[] = $user_data;
             }
         }
         return rest_ensure_response([
@@ -193,6 +195,7 @@ class DataController
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
                 }
+                $toSend[] = $user_data;
             }
         }
         return rest_ensure_response([
