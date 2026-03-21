@@ -116,6 +116,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
                 }
                 $toSend[] = $user_data;
             }
@@ -155,6 +156,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
                 }
                 $toSend[] = $user_data;
             }
@@ -194,6 +196,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
                 }
                 $toSend[] = $user_data;
             }
