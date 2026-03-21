@@ -6,6 +6,20 @@ define('CISON_CURRENT_YEAR', (int) date('Y'));
 
 class Money
 {
+    public static function getArrayCount(array $arr): int {
+    $hasTrue = false;
+    $hasFalse = false;
+
+    foreach ($arr as $val) {
+        if ($val === true) $hasTrue = true;
+        else $hasFalse = true;
+
+        // If we've found both, it's definitely mixed. Exit early.
+        if ($hasTrue && $hasFalse) return 0;
+    }
+
+    return $hasTrue ? 1 : -1;
+}
     /**
      * Return all product IDs (Regular / Retired / Student) that count as
      * "Annual dues" for a given year.
@@ -206,7 +220,7 @@ class Money
         }
 
         // Cache to transient to avoid hammering WC queries
-        $cache_key = 'cison_paid_fees_' . $user_id;
+        $cache_key = 'cison_paid_fees_2025' . $user_id;
         $cached = get_transient($cache_key);
         if (is_array($cached)) {
             return $cached;
@@ -223,7 +237,7 @@ class Money
 
         $reg_year = $is_transiting
             ? 2023
-            : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
+            : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
         $required_fees = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
 
@@ -417,7 +431,7 @@ class Money
 
     public static function cison_get_required_fees_till_2025($is_transiting, $reg_year)
     {
-        $current_year = CISON_CURRENT_YEAR;
+        $current_year = 2025;
         $required = [];
 
         if ($is_transiting) {

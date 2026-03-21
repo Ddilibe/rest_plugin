@@ -106,13 +106,13 @@ class DataController
                 : '';
             $reg_year = $is_transiting
                 ? 2023
-                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
             $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
             $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
-            if (count($unpaid) === 0) {
+            if (Money::getArrayCount($paid) === 1) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
@@ -146,13 +146,13 @@ class DataController
                 : '';
             $reg_year = $is_transiting
                 ? 2023
-                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
             $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
             $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
-            if (count($paid) >= 1 && count($paid) < count($required)) {
+            if (Money::getArrayCount($paid) === 0) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
@@ -184,15 +184,17 @@ class DataController
             $member_id = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID])
                 : '';
+            if (!$member_id)
+                continue;
             $reg_year = $is_transiting
                 ? 2023
-                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
             $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
             $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
-            if (count($required) === count($unpaid)) {
+            if (Money::getArrayCount($paid) === -1) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
