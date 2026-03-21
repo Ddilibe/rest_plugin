@@ -151,7 +151,7 @@ class DataController
             $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
-            if (count($paid) > 0 && count($paid) < count($required)) {
+            if (count($paid) >= 1 && count($paid) < count($required)) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
