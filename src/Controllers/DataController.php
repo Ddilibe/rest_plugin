@@ -93,7 +93,7 @@ class DataController
         $table_name = $wpdb->prefix . 'users';
 
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -108,8 +108,8 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
+            $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
             if (count($unpaid) === 0) {
@@ -132,7 +132,7 @@ class DataController
         $table_name = $wpdb->prefix . 'users';
 
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -147,11 +147,11 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
+            $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
-            if (count($unpaid) !== 0 && count($paid) >= 1) {
+            if (count($paid) !== 0 && count($unpaid) !== 0 && count($paid) < count($required)) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
@@ -171,7 +171,7 @@ class DataController
         $table_name = $wpdb->prefix . 'users';
 
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -186,8 +186,8 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), CISON_CURRENT_YEAR)) : CISON_CURRENT_YEAR);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
+            $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees_till_2025($userID);
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
             if (count($required) == count($unpaid)) {
