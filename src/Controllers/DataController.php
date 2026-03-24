@@ -116,7 +116,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
-                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
                 }
                 $toSend[] = $user_data;
             }
@@ -156,7 +156,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
-                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
                 }
                 $toSend[] = $user_data;
             }
@@ -198,7 +198,7 @@ class DataController
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
-                    $user_data['fees'] = ['paid'=>$paid, 'unpaid'=>$unpaid];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
                 }
                 $toSend[] = $user_data;
             }
@@ -209,4 +209,129 @@ class DataController
         ], 200);
 
     }
+
+    public static function users_with_cleared_payments()
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
+
+
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $toSend = array();
+
+        foreach ($users as $user) {
+            $userID = (int) $user['ID'];
+            $is_transiting = function_exists('bp_get_profile_field_data')
+                ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $userID]) === 'Yes')
+                : false;
+            $member_id = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID])
+                : '';
+            $reg_year = $is_transiting
+                ? 2023
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
+
+            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees($userID);
+            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+
+            if (Money::getArrayCount($paid) === 1) {
+                $user_data = DataController::get_userdata($userID);
+                if ($user_data) {
+                    $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
+                }
+                $toSend[] = $user_data;
+            }
+        }
+        return rest_ensure_response([
+            "data" => $toSend,
+            "status" => "success"
+        ], 200);
+
+    }
+    public static function users_with_partial_payments()
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
+
+
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $toSend = array();
+
+        foreach ($users as $user) {
+            $userID = (int) $user['ID'];
+            $is_transiting = function_exists('bp_get_profile_field_data')
+                ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $userID]) === 'Yes')
+                : false;
+            $member_id = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID])
+                : '';
+            $reg_year = $is_transiting
+                ? 2023
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
+
+            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees($userID);
+            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+
+            if (Money::getArrayCount($paid) === 0) {
+                $user_data = DataController::get_userdata($userID);
+                if ($user_data) {
+                    $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
+                }
+                $toSend[] = $user_data;
+            }
+        }
+        return rest_ensure_response([
+            "data" => $toSend,
+            "status" => "success"
+        ], 200);
+
+    }
+    public static function users_without_payments()
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'users';
+
+
+        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $toSend = array();
+
+        foreach ($users as $user) {
+            $userID = (int) $user['ID'];
+            $is_transiting = function_exists('bp_get_profile_field_data')
+                ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $userID]) === 'Yes')
+                : false;
+            $member_id = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID])
+                : '';
+            if (!$member_id)
+                continue;
+            $reg_year = $is_transiting
+                ? 2023
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
+
+            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees($userID);
+            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+
+            if (Money::getArrayCount($paid) === -1) {
+                $user_data = DataController::get_userdata($userID);
+                if ($user_data) {
+                    $user_data["user_email"] = $user['user_email'];
+                    $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
+                }
+                $toSend[] = $user_data;
+            }
+        }
+        return rest_ensure_response([
+            "data" => $toSend,
+            "status" => "success"
+        ], 200);
+
+    }
+
+
 }
