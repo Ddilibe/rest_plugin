@@ -76,6 +76,7 @@ class CertController
         $middlename = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id]) ?: ''
             : '';
+        
 
         $surname = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id]) ?: ''
@@ -122,7 +123,7 @@ class CertController
 
         if (!$inserted) {
             error_log("CISON: Failed to insert certificate for user {$user_id}: " . $wpdb->last_error);
-            return new WP_Error('db_error', 'Failed to create certificate record', ['status' => 500]);
+            return new WP_Error('db_error', 'Failed to create certificate record: ' . $wpdb->last_error, ['status' => 500]);
         }
 
         return rest_ensure_response([
