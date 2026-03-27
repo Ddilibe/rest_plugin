@@ -113,7 +113,30 @@ class CertController
         ));
 
         $next_seq = $max_seq ? (int) $max_seq + 1 : 1;
-        $cert_id_formatted = CISON_CURRENT_YEAR . '-' . sprintf('%05d', $next_seq);
+
+        // Cycle forward until we find a cert_id that does not already exist in the table.
+        $max_attempts = 100;
+        $attempt = 0;
+        do {
+            if ($attempt >= $max_attempts) {
+                $wpdb->query("SELECT RELEASE_LOCK('cison_cert_id_lock')");
+                return new WP_Error('cert_id_exhausted', 'Could not find a free certificate ID after ' . $max_attempts . ' attempts.', ['status' => 500]);
+            }
+
+            $cert_id_formatted = CISON_CURRENT_YEAR . '-' . sprintf('%05d', $next_seq);
+
+            $id_exists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$cert_table_name} WHERE cert_id = %s",
+                $cert_id_formatted
+            ));
+
+            if ($id_exists) {
+                $next_seq++;
+            }
+
+            $attempt++;
+        } while ($id_exists);
+
         $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id_formatted}.pdf";
 
         // Insert certificate record (still inside the lock window)
