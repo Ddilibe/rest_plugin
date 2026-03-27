@@ -76,7 +76,7 @@ class CertController
         $middlename = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id]) ?: ''
             : '';
-        
+
 
         $surname = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id]) ?: ''
@@ -92,7 +92,18 @@ class CertController
         // Generate certificate data
         $date_now = date('Y-m-d H:i:s');
         $date_issued_unix = strtotime($date_now);
-        $cert_id = CISON_CURRENT_YEAR . '-' . sprintf('%05d', cison_get_next_cert_number());
+        // $cert_id = CISON_CURRENT_YEAR . '-' . sprintf('%05d', cison_get_next_cert_number());
+        $sql = "SELECT cert_id FROM your_table_name ORDER BY date_issued DESC LIMIT 1";
+        $stmt = $wpdb->query($sql);
+        $row = $stmt->fetch();
+
+        if ($row) {
+            $certIdDate = $row['cert_id'];
+            $parts = explode('-', $certIdDate);
+            $cert_id = (int) $parts[1];
+        } else {
+            return new WP_Error('db_error', 'Failed to create certificate record: ' . $wpdb->last_error, ['status' => 500]);
+        }
         $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id}.pdf";
         $secret_token = wp_generate_password(12, false);
 
