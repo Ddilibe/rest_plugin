@@ -24,6 +24,7 @@ class CertController
     public static function addNewCertification(WP_REST_REQUEST $request)
     {
         global $wpdb;
+
         $body = $request->get_json_params();
         $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
         $member_id = isset($body['member_id']) ? sanitize_text_field($body['member_id']) : '';
@@ -33,7 +34,7 @@ class CertController
             return new WP_Error('invalid_id', 'User ID or Member ID is required', ['status' => 400]);
         }
 
-        // Get user_id from member_id if needed
+        // Resolve user_id from member_id if needed
         if (empty($user_id) && !empty($member_id)) {
             $table_name = $wpdb->prefix . 'bp_xprofile_data';
             $user_id = $wpdb->get_var($wpdb->prepare(
@@ -47,7 +48,7 @@ class CertController
             return new WP_Error('not_found', "User not found for Member ID: {$member_id}", ['status' => 404]);
         }
 
-        // Check if certificate already exists
+        // Check if a valid certificate already exists
         $cert_table_name = CISON_CERT_TABLE;
         $existing_cert = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$cert_table_name} WHERE user_id = %d LIMIT 1",
@@ -62,7 +63,7 @@ class CertController
             );
         }
 
-        // Get user profile data
+        // Fetch user profile data
         $is_transiting = function_exists('bp_get_profile_field_data')
             ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $user_id]) === 'Yes')
             : false;
@@ -70,16 +71,15 @@ class CertController
         $member_type = $is_transiting ? 'transiting' : 'inducted';
 
         $firstname = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id]) ?: ''
+            ? (bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id]) ?: '')
             : '';
 
         $middlename = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id]) ?: ''
+            ? (bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id]) ?: '')
             : '';
 
-
         $surname = function_exists('bp_get_profile_field_data')
-            ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id]) ?: ''
+            ? (bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id]) ?: '')
             : '';
 
         $user_data = get_userdata($user_id);
@@ -89,32 +89,26 @@ class CertController
             return new WP_Error('invalid_user', 'User email not found', ['status' => 400]);
         }
 
-        // Generate certificate data
+        // Determine the next cert_id by incrementing the most recent one
+        $last_cert = $wpdb->get_row(
+            "SELECT cert_id FROM {$cert_table_name} ORDER BY date_issued DESC LIMIT 1"
+        );
+
+        if ($last_cert) {
+            $parts = explode('-', $last_cert->cert_id);
+            $cert_id = (int) end($parts) + 1;
+        } else {
+            // First certificate ever — start at 1
+            $cert_id = 1;
+        }
+
+        // Build certificate metadata
         $date_now = date('Y-m-d H:i:s');
         $date_issued_unix = strtotime($date_now);
-        // $cert_id = CISON_CURRENT_YEAR . '-' . sprintf('%05d', cison_get_next_cert_number());
-        try {
-            //code...
-            $sql = "SELECT cert_id FROM {$cert_table_name} ORDER BY date_issued DESC LIMIT 1";
-            $stmt = $wpdb->query($sql);
-            $row = $stmt->fetch();
-
-            if ($row) {
-                $certIdDate = $row['cert_id'];
-                $parts = explode('-', $certIdDate);
-                $cert_id = (int) $parts[1];
-            } else {
-                return new WP_Error('db_error', 'Failed to create certificate record: ' . $wpdb->last_error, ['status' => 500]);
-            }
-        } catch (\Throwable $th) {
-            return new WP_Error('db_error', $th, ['status' => 500]);
-        }
-        $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id}.pdf";
+        $cert_id_formatted = CISON_CURRENT_YEAR . '-' . sprintf('%05d', $cert_id);
+        $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id_formatted}.pdf";
         $secret_token = wp_generate_password(12, false);
-
-        $cutoff_date_to_store = $is_transiting
-            ? date('Y-m-d', $date_issued_unix)
-            : null;
+        $cutoff_date = $is_transiting ? date('Y-m-d', $date_issued_unix) : null;
 
         // Insert certificate record
         $inserted = $wpdb->insert(
@@ -122,7 +116,7 @@ class CertController
             [
                 'user_id' => $user_id,
                 'member_id' => $member_id,
-                'cert_id' => $cert_id,
+                'cert_id' => $cert_id_formatted,
                 'certificate_path' => $cert_path,
                 'date_issued' => $date_issued_unix,
                 'secret_token' => $secret_token,
@@ -132,7 +126,7 @@ class CertController
                 'surname' => $surname,
                 'email' => $email,
                 'member_type' => $member_type,
-                'cutoff_date' => $cutoff_date_to_store,
+                'cutoff_date' => $cutoff_date,
             ],
             ['%d', '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s']
         );
@@ -144,10 +138,10 @@ class CertController
 
         return rest_ensure_response([
             'user_id' => $user_id,
-            'cert_id' => $cert_id,
+            'cert_id' => $cert_id_formatted,
             'certificate_path' => $cert_path,
             'status' => 'success',
-            'message' => 'Certificate record created successfully'
+            'message' => 'Certificate record created successfully',
         ]);
     }
 
