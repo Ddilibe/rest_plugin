@@ -93,7 +93,7 @@ class CertController
         $date_now = date('Y-m-d H:i:s');
         $date_issued_unix = strtotime($date_now);
         // $cert_id = CISON_CURRENT_YEAR . '-' . sprintf('%05d', cison_get_next_cert_number());
-        $sql = "SELECT cert_id FROM your_table_name ORDER BY date_issued DESC LIMIT 1";
+        $sql = "SELECT cert_id FROM {$cert_table_name} ORDER BY date_issued DESC LIMIT 1";
         $stmt = $wpdb->query($sql);
         $row = $stmt->fetch();
 
