@@ -89,28 +89,34 @@ class CertController
             return new WP_Error('invalid_user', 'User email not found', ['status' => 400]);
         }
 
-        // Determine the next cert_id by incrementing the most recent one
-        $last_cert = $wpdb->get_row(
-            "SELECT cert_id FROM {$cert_table_name} ORDER BY date_issued DESC LIMIT 1"
-        );
+        // Acquire a named MySQL advisory lock so only one process can
+        // read-then-insert the cert_id sequence at a time (timeout: 10s).
+        $lock_acquired = $wpdb->get_var("SELECT GET_LOCK('cison_cert_id_lock', 10)");
 
-        if ($last_cert) {
-            $parts = explode('-', $last_cert->cert_id);
-            $cert_id = (int) end($parts) + 1;
-        } else {
-            // First certificate ever — start at 1
-            $cert_id = 1;
+        if ($lock_acquired != 1) {
+            return new WP_Error('lock_timeout', 'Could not acquire certificate ID lock. Please try again.', ['status' => 503]);
         }
 
         // Build certificate metadata
         $date_now = date('Y-m-d H:i:s');
         $date_issued_unix = strtotime($date_now);
-        $cert_id_formatted = CISON_CURRENT_YEAR . '-' . sprintf('%05d', $cert_id);
-        $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id_formatted}.pdf";
         $secret_token = wp_generate_password(12, false);
         $cutoff_date = $is_transiting ? date('Y-m-d', $date_issued_unix) : null;
 
-        // Insert certificate record
+        // Derive the next cert sequence number atomically while the lock is held.
+        // MAX() on the numeric suffix is reliable regardless of insertion order.
+        $max_seq = $wpdb->get_var($wpdb->prepare(
+            "SELECT MAX(CAST(SUBSTRING_INDEX(cert_id, '-', -1) AS UNSIGNED))
+         FROM {$cert_table_name}
+         WHERE cert_id LIKE %s",
+            CISON_CURRENT_YEAR . '-%'
+        ));
+
+        $next_seq = $max_seq ? (int) $max_seq + 1 : 1;
+        $cert_id_formatted = CISON_CURRENT_YEAR . '-' . sprintf('%05d', $next_seq);
+        $cert_path = CISON_CERTIFICATE_DIR . "certificate_{$cert_id_formatted}.pdf";
+
+        // Insert certificate record (still inside the lock window)
         $inserted = $wpdb->insert(
             $cert_table_name,
             [
@@ -130,6 +136,9 @@ class CertController
             ],
             ['%d', '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s']
         );
+
+        // Always release the lock before returning
+        $wpdb->query("SELECT RELEASE_LOCK('cison_cert_id_lock')");
 
         if (!$inserted) {
             error_log("CISON: Failed to insert certificate for user {$user_id}: " . $wpdb->last_error);
