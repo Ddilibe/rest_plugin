@@ -446,4 +446,46 @@ class CertController
             'status' => 'success'
         ], 200);
     }
+
+    public static function get_qualified_certificates(WP_REST_REQUEST $request)
+    {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'users';
+
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
+        $toSend = array();
+        foreach ($users as $user) {
+            $userID = (int) $user['ID'];
+            $is_transiting = function_exists('bp_get_profile_field_data')
+                ? (bp_get_profile_field_data(['field' => 1595, 'user_id' => $userID]) === 'Yes')
+                : false;
+
+            if (!$is_transiting)
+                continue;
+
+            $member_id = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID]) : '';
+
+            $reg_year = $is_transiting
+                ? 2023
+                : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
+
+            $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
+            $paid = Money::cison_get_paid_fees_till_2025($userID);
+            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+
+            if (Money::getArrayCount($paid) === 1) {
+                $user_data = DataController::get_userdata($userID);
+                if ($user_data) {
+                    $user_data["user_email"] = $user['user_email'];
+                }
+                $toSend[] = $user_data;
+            }
+        }
+        return rest_ensure_response([
+            "data" => $toSend,
+            "status" => "success"
+        ], 200);
+    }
 }

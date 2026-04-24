@@ -40,6 +40,11 @@ class DataController
         $surname = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 2, 'user_id' => $userID])
             : '';
+
+        $cert_name = function_exists('bp_get_profile_field_data')
+            ? bp_get_profile_field_data(['field' => 1611, 'user_id' => $userID])
+            : '';
+        
         return [
             "user_id" => $userID,
             "member_id" => $member_id,
@@ -48,6 +53,7 @@ class DataController
             "middle_name" => $middlename,
             "last_name" => $surname,
             "phone_number" => $phone_number,
+            "certificate_name" => $cert_name
         ];
 
     }

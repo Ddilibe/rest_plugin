@@ -78,6 +78,11 @@ class CertRoute
             'callback' => [CertController::class, 'list_certificates'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
-    
+
+        register_rest_route($part_a, '/get-qualified-certificates', [
+            'methods' => 'GET',
+            'callback' => [CertController::class, 'get_qualified_certificates'],
+            'permission_callback' => [Auth::class, 'jwt'],
+        ]);
     }
 }
