@@ -476,11 +476,19 @@ class CertController
             $unpaid = Money::cison_get_unpaid_fees($required, $paid);
 
             if (Money::getArrayCount($paid) === 1) {
-                $user_data = DataController::get_userdata($userID);
-                if ($user_data) {
-                    $user_data["user_email"] = $user['user_email'];
+                $cert_table_name = CISON_CERT_TABLE;
+                $certificate = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM {$cert_table_name} WHERE user_id = %d LIMIT 1",
+                    $userID
+                ));
+
+                if (empty($certificate)) {
+                    $user_data = DataController::get_userdata($userID);
+                    if ($user_data) {
+                        $user_data["user_email"] = $user['user_email'];
+                    }
+                    $toSend[] = $user_data;
                 }
-                $toSend[] = $user_data;
             }
         }
         return rest_ensure_response([
