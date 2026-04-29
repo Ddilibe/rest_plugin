@@ -5,6 +5,7 @@ namespace SRC\Routes;
 use SRC\Config\Config;
 use SRC\Controllers\UserController;
 use SRC\Middleware\Auth;
+use SRC\Controllers\TransactionController;
 
 
 class UserRoute {
@@ -69,5 +70,11 @@ class UserRoute {
             'callback' => [UserController::class, 'getInvalidUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/transactions', [
+            'methods'=>'GET',
+            'callback' => [TransactionController::class, 'get_transactions'],
+            'permission_callback' => [Auth::class, 'jwt'],
+            'args' => [TransactionController::class, "get_endpoint_args"]
+        ]);        
     }
 }
