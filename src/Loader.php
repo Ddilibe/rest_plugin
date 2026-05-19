@@ -8,6 +8,7 @@ use SRC\Routes\UserRoute;
 use SRC\Routes\ProductRoute;
 use SRC\Routes\CertRoute;
 use SRC\Routes\DataRoute;
+use SRC\Routes\CertificationRoute;
 
 
 class Loader
@@ -26,6 +27,8 @@ class Loader
         ProductRoute::register();
         CertRoute::register();
         DataRoute::register();
+        CertificationRoute::register();
+
     }
 }
 
