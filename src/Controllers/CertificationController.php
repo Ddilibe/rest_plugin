@@ -96,7 +96,19 @@ class CertificationController
         }
 
         $file_url = wp_get_attachment_url($attachment_id);
-        $user_id = $request->get_param('user_id') ? intval($request->get_param('user_id')) : null;
+        $email = sanitize_text_field($request->get_param('user_email'));
+        if (!$email) {
+            return new WP_Error("Email is required for certificate creation.");
+        }
+        ;
+         $user = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT ID, user_email FROM {$table} WHERE user_email = %s LIMIT 1",
+                $email
+            )
+        );
+        $user_id = $user->ID ? $user->ID: null;
+        
         $template_id = sanitize_text_field($request->get_param('template_id'));
 
         $secure_auth = Config::get('SSSECURE_AUTH_KEY', '');
@@ -111,11 +123,6 @@ class CertificationController
         }
         ;
 
-        $email = sanitize_text_field($request->get_param('user_email'));
-        if (!$email) {
-            return new WP_Error("Email is required for certificate creation.");
-        }
-        ;
 
 
         $cert_hmac_post = sanitize_text_field($request->get_param('hmac_key'));
