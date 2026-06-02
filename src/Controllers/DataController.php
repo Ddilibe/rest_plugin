@@ -44,7 +44,7 @@ class DataController
         $cert_name = function_exists('bp_get_profile_field_data')
             ? bp_get_profile_field_data(['field' => 1611, 'user_id' => $userID])
             : '';
-        
+
         return [
             "user_id" => $userID,
             "member_id" => $member_id,
@@ -330,6 +330,30 @@ class DataController
                     $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
                 }
                 $toSend[] = $user_data;
+            }
+        }
+        return rest_ensure_response([
+            "data" => $toSend,
+            "status" => "success"
+        ], 200);
+
+    }
+
+    public static function getEducationForUserID(WP_REST_REQUEST $request)
+    {
+        $toSend = [];
+        $body = $request->get_json_params();
+        $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
+        $education_data = xprofile_get_field_data('Educational Information', $user_id);
+
+        if (!empty($education_data)) {
+            if (is_array($education_data)) {
+                foreach ($education_data as $index => $education) {
+                    $toSend[] = $education;
+                }
+            } else {
+                // If it's just a single plain text field
+                $toSend[] = "Education: " . esc_html($education_data);
             }
         }
         return rest_ensure_response([
