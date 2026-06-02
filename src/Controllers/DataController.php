@@ -355,6 +355,7 @@ class DataController
                 $toSend[] = "Education: " . esc_html($education_data);
             }
         }
+        $toSend[] = $user_id;
         return rest_ensure_response([
             "data" => $toSend,
             "status" => "success"
