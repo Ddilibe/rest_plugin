@@ -101,14 +101,16 @@ class CertificationController
             return new WP_Error("Email is required for certificate creation.");
         }
         ;
-         $user = $wpdb->get_row(
+
+        $user_table = $wpdb->prefix . 'users';
+        $user = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT ID, user_email FROM {$table} WHERE user_email = %s LIMIT 1",
+                "SELECT ID, user_email FROM {$user_table} WHERE user_email = %s LIMIT 1",
                 $email
             )
         );
-        $user_id = $user->ID ? $user->ID: null;
-        
+        $user_id = (int) $user->ID ? $user->ID : null;
+
         $template_id = sanitize_text_field($request->get_param('template_id'));
 
         $secure_auth = Config::get('SSSECURE_AUTH_KEY', '');
