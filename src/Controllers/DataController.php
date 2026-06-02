@@ -344,7 +344,7 @@ class DataController
         $toSend = [];
         $body = $request->get_json_params();
         $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
-        $education_data = xprofile_get_field_data('Educational Information', $user_id);
+        $education_data = xprofile_get_field_data('Education', $user_id);
 
         if (!empty($education_data)) {
             if (is_array($education_data)) {
