@@ -343,26 +343,57 @@ class DataController
     {
         $toSend = [];
         $body = $request->get_json_params();
-        $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
-        $education_data = xprofile_get_field_data('Education', $user_id);
 
-        // if (!empty($education_data)) {
-        //     if (is_array($education_data)) {
-        //         foreach ($education_data as $index => $education) {
-        //             $toSend[] = $education;
-        //         }
-        //     } else {
-        //         $toSend[] = "Education: " . esc_html($education_data);
-        //     }
-        // }
-        $toSend[] = $user_id;
-        $toSend[] = $education_data;
+        // Clean up input and ensure it's an integer ID
+        $user_id = isset($body['user_id']) ? intval($body['user_id']) : 0;
+
+        if ($user_id <= 0) {
+            return rest_ensure_response([
+                "data" => [],
+                "status" => "error",
+                "message" => "Invalid or missing user_id"
+            ], 400);
+        }
+
+        // 1. Fetch all profile groups (sections) for the user
+        $profile_groups = bp_xprofile_get_groups([
+            'user_id' => $user_id,
+            'fetch_fields' => true,
+            'populate_fields' => true,
+        ]);
+
+        // 2. Loop through sections to find the "Education" section
+        if (!empty($profile_groups)) {
+            foreach ($profile_groups as $group) {
+                // Case-insensitive match for your "Education" section
+                if (trim(strtolower($group->name)) === 'education') {
+
+                    // 3. Extract the data from every field inside this section
+                    foreach ($group->fields as $field) {
+                        $field_value = xprofile_get_field_data($field->id, $user_id);
+
+                        if (!empty($field_value)) {
+                            // If it's a repeater/array field, clean all items inside it
+                            if (is_array($field_value)) {
+                                $toSend[$field->name] = array_map('maybe_unserialize', $field_value);
+                            } else {
+                                $toSend[$field->name] = maybe_unserialize($field_value);
+                            }
+                        } else {
+                            $toSend[$field->name] = ""; // Keep structure clean if empty
+                        }
+                    }
+                    break; // Found the section, stop looking
+                }
+            }
+        }
+
         return rest_ensure_response([
             "data" => $toSend,
             "status" => "success"
         ], 200);
-
     }
+
 
 
 }
