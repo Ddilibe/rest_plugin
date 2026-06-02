@@ -48,5 +48,11 @@ class DataRoute
             "callback" => [DataController::class, "users_without_payments"],
             "permission_callback" => [Auth::class, "jwt"]
         ]);
+
+        register_rest_route($root_api, "/users/education", [
+            "methods" => "GET",
+            "callback" => [DataController::class, "getEducationForUserID"],
+            "permission_callback" => [Auth::class, "jwt"]
+        ]);
     }
 }

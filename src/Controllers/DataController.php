@@ -352,7 +352,6 @@ class DataController
                     $toSend[] = $education;
                 }
             } else {
-                // If it's just a single plain text field
                 $toSend[] = "Education: " . esc_html($education_data);
             }
         }
