@@ -390,6 +390,7 @@ class DataController
 
         return rest_ensure_response([
             "data" => $toSend,
+            "group" => $profile_groups,
             "status" => "success"
         ], 200);
     }
