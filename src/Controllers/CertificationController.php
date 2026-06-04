@@ -45,7 +45,7 @@ class CertificationController
 
         // Check for file replacement
         if (!empty($_FILES['certificate_file'])) {
-            $attachment_id = $this->upload_file('certificate_file');
+            $attachment_id = $this->upload_file('certificate_file', $current_cert->cert_name);
             if (is_wp_error($attachment_id)) {
                 return $attachment_id;
             }
@@ -85,12 +85,14 @@ class CertificationController
             return new WP_Error("Table not found");
         }
 
+        $name = $request->get_param("name") ? sanitize_text_field($request->get_param('name')) : "Membership Certificate";
+
         if (empty($_FILES['certificate_file'])) {
             return new WP_Error('missing_file', 'A certificate file is required.', array('status' => 400));
         }
 
         // Handle secure upload
-        $attachment_id = $this->upload_file('certificate_file');
+        $attachment_id = $this->upload_file('certificate_file', $name);
         if (is_wp_error($attachment_id)) {
             return $attachment_id;
         }
@@ -134,7 +136,6 @@ class CertificationController
         if (!hash_equals($cert_hmac_post, $cert_hmac)) {
             return new WP_Error("Invalid cryptorization key");
         }
-        $name = $request->get_param("name") ? sanitize_text_field($request->get_param('name')) : "Membership Certificate";
 
         $data = array(
             'user_id' => $user_id,
@@ -164,8 +165,7 @@ class CertificationController
 
         return new WP_REST_Response($data, 201);
     }
-
-    private function upload_file($file_key)
+    private function upload_file($file_key, $folder = '')
     {
         require_once ABSPATH . 'wp-admin/includes/image.php';
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -173,32 +173,68 @@ class CertificationController
 
         add_filter('intermediate_image_sizes_advanced', '__return_empty_array');
 
-        add_filter('upload_dir', function ($param) {
+        $upload_dir_filter = function ($uploads) use ($folder) {
 
-            $secure_root = dirname(ABSPATH) . '/secure_certificates';
-
-            if (!file_exists($secure_root)) {
-                wp_mkdir_p($secure_root);
+            if (empty($folder)) {
+                return $uploads;
             }
 
-            $param['path'] = $secure_root;
-            $param['subdir'] = '';
-            $param['basedir'] = $secure_root;
+            // Remove leading/trailing slashes
+            $folder = trim($folder, '/');
 
-            $param['url'] = '';
-            $param['baseurl'] = '';
+            $custom_dir = $uploads['basedir'] . '/' . $folder;
 
-            return $param;
-        });
+            // Create directory if it doesn't exist
+            if (!file_exists($custom_dir)) {
+                if (!wp_mkdir_p($custom_dir)) {
+                    return $uploads;
+                }
+            }
+
+            // Ensure directory is writable
+            if (!is_writable($custom_dir)) {
+                return $uploads;
+            }
+
+            $uploads['path'] = $custom_dir;
+            $uploads['subdir'] = '/' . $folder;
+            $uploads['url'] = $uploads['baseurl'] . '/' . $folder;
+
+            return $uploads;
+        };
+
+        add_filter('upload_dir', $upload_dir_filter);
+
         $attachment_id = media_handle_upload($file_key, 0);
 
-        remove_all_filters('intermediate_image_sizes_advanced');
-        remove_all_filters('upload_dir');
+        remove_filter('upload_dir', $upload_dir_filter);
+        remove_filter('intermediate_image_sizes_advanced', '__return_empty_array');
 
         if (is_wp_error($attachment_id)) {
-            return new WP_Error('upload_error', $attachment_id->get_error_message(), array('status' => 500));
+            return new WP_Error(
+                'upload_error',
+                $attachment_id->get_error_message(),
+                ['status' => 500]
+            );
         }
 
-        return $attachment_id;
+        $file_path = get_attached_file($attachment_id);
+
+        if (!$file_path || !file_exists($file_path)) {
+
+            wp_delete_attachment($attachment_id, true);
+
+            return new WP_Error(
+                'file_missing',
+                'The uploaded file could not be found.',
+                ['status' => 500]
+            );
+        }
+
+        return [
+            'attachment_id' => $attachment_id,
+            'file_path' => $file_path,
+            'file_url' => wp_get_attachment_url($attachment_id),
+        ];
     }
 }
