@@ -45,12 +45,12 @@ class CertificationController
 
         // Check for file replacement
         if (!empty($_FILES['certificate_file'])) {
-            $attachment_id = $this->upload_file('certificate_file', $current_cert->cert_name);
-            if (is_wp_error($attachment_id)) {
-                return $attachment_id;
+            $upload_result = $this->upload_file('certificate_file', $current_cert->cert_name);
+            if (is_wp_error($upload_result)) {
+                return $upload_result;
             }
 
-            $new_file_url = wp_get_attachment_url($attachment_id);
+            $new_file_url = $upload_result['file_url'];
             $update_data['cert_hmac'] = wp_hash($current_cert->cert_key . '|' . $current_cert->user_id . '|' . $new_file_url, 'nonce');
         }
 
@@ -92,12 +92,14 @@ class CertificationController
         }
 
         // Handle secure upload
-        $attachment_id = $this->upload_file('certificate_file', $name);
-        if (is_wp_error($attachment_id)) {
-            return $attachment_id;
+        $upload_result = $this->upload_file('certificate_file', $name);
+        if (is_wp_error($upload_result)) {
+            return $upload_result;
         }
 
-        $file_url = wp_get_attachment_url($attachment_id);
+        $attachment_id = $upload_result['attachment_id'];
+        $file_url      = $upload_result['file_url'];
+
         $email = sanitize_text_field($request->get_param('user_email'));
         if (!$email) {
             return new WP_Error("Email is required for certificate creation.");
