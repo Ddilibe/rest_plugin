@@ -98,7 +98,7 @@ class CertificationController
         }
 
         $attachment_id = $upload_result['attachment_id'];
-        $file_url      = $upload_result['file_url'];
+        $file_url      = $upload_result['file_path'];
 
         $email = sanitize_text_field($request->get_param('user_email'));
         if (!$email) {
@@ -167,7 +167,7 @@ class CertificationController
 
         return new WP_REST_Response($data, 201);
     }
-    private function upload_file($file_key, $folder = '')
+    private function upload_file($file_key, $folder)
     {
         require_once ABSPATH . 'wp-admin/includes/image.php';
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -180,7 +180,7 @@ class CertificationController
             if (empty($folder)) {
                 return $uploads;
             }
-
+            $folder = str_replace(' ', '_', $folder);
             // Remove leading/trailing slashes
             $folder = trim($folder, '/');
 
