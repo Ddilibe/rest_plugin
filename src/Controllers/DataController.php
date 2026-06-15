@@ -237,9 +237,9 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
-            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+            $required = cison_get_required_fees($is_transiting, $reg_year, False);
+            $paid = cison_get_paid_fees( $userID);
+            $unpaid = cison_get_unpaid_fees($required, $paid);
 
             if (Money::getArrayCount($paid) === 1) {
                 $user_data = DataController::get_userdata($userID);
@@ -380,10 +380,10 @@ class DataController
                                 $toSend[$field->name] = maybe_unserialize($field_value);
                             }
                         } else {
-                            $toSend[$field->name] = ""; // Keep structure clean if empty
+                            $toSend[$field->name] = "";
                         }
                     }
-                    break; // Found the section, stop looking
+                    break;
                 }
             }
         }
@@ -394,7 +394,4 @@ class DataController
             "status" => "success"
         ], 200);
     }
-
-
-
 }
