@@ -222,7 +222,7 @@ class DataController
         $table_name = $wpdb->prefix . 'users';
 
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -238,14 +238,19 @@ class DataController
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
             $required = cison_get_required_fees($is_transiting, $reg_year, False);
-            $paid = cison_get_paid_fees( $userID);
+            $paid = cison_get_paid_fees($userID);
             $unpaid = cison_get_unpaid_fees($required, $paid);
+            $profile_type = bp_get_member_type($userID, true);
 
             if (Money::getArrayCount($paid) === 1) {
                 $user_data = DataController::get_userdata($userID);
                 if ($user_data) {
                     $user_data["user_email"] = $user['user_email'];
                     $user_data['fees'] = ['paid' => $paid, 'unpaid' => $unpaid];
+                    $user_data['is_transiting'] = $is_transiting;
+                    $user_data['member_id'] = $member_id;
+                    $user_data['reg_year'] = $reg_year;
+                    $user_data['profile_type'] = $profile_type;
                 }
                 $toSend[] = $user_data;
             }
