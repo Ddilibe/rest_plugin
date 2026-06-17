@@ -474,8 +474,8 @@ class CertController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
-            $required = cison_get_required_fees_till_2025($is_transiting, $reg_year);
-            $paid = cison_get_paid_fees_till_2025($userID);
+            $required = cison_get_required_fees($is_transiting, $reg_year);
+            $paid = cison_get_paid_fees($userID);
             $unpaid = cison_get_unpaid_fees($required, $paid);
             $profile_type = bp_get_member_type($userID, true);
 
