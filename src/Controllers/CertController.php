@@ -474,9 +474,10 @@ class CertController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
-            $required = Money::cison_get_required_fees_till_2025($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees_till_2025($userID);
-            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+            $required = cison_get_required_fees_till_2025($is_transiting, $reg_year);
+            $paid = cison_get_paid_fees_till_2025($userID);
+            $unpaid = cison_get_unpaid_fees($required, $paid);
+            $profile_type = bp_get_member_type($userID, true);
 
             if (Money::getArrayCount($paid) === 1) {
                 $cert_table_name = CISON_CERT_TABLE;
@@ -489,6 +490,7 @@ class CertController
                     $user_data = DataController::get_userdata($userID);
                     if ($user_data) {
                         $user_data["user_email"] = $user['user_email'];
+                        $user_data['profile_type'] = $profile_type;
                     }
                     $toSend[] = $user_data;
                 }

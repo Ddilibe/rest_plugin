@@ -267,7 +267,7 @@ class DataController
         $table_name = $wpdb->prefix . 'users';
 
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -282,9 +282,9 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
-            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+            $required = cison_get_required_fees($is_transiting, $reg_year);
+            $paid = cison_get_paid_fees($userID);
+            $unpaid = cison_get_unpaid_fees($required, $paid);
 
             if (Money::getArrayCount($paid) === 0) {
                 $user_data = DataController::get_userdata($userID);
@@ -306,8 +306,7 @@ class DataController
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
 
-
-        $users = $wpdb->get_results("SELECT * FROM {$table_name} WHERE user_registered <= '2025-12-31'", ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
         $toSend = array();
 
         foreach ($users as $user) {
@@ -324,9 +323,9 @@ class DataController
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
 
-            $required = Money::cison_get_required_fees($is_transiting, $reg_year);
-            $paid = Money::cison_get_paid_fees($userID);
-            $unpaid = Money::cison_get_unpaid_fees($required, $paid);
+            $required = cison_get_required_fees($is_transiting, $reg_year);
+            $paid = cison_get_paid_fees($userID);
+            $unpaid = cison_get_unpaid_fees($required, $paid);
 
             if (Money::getArrayCount($paid) === -1) {
                 $user_data = DataController::get_userdata($userID);
