@@ -8,6 +8,8 @@ use SRC\Utils\Certificate;
 
 use WP_Error;
 use WP_REST_REQUEST;
+use WP_User_Query;
+use WP_REST_Response;
 
 
 define('CISON_CURRENT_YEAR', (int) date('Y'));
