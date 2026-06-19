@@ -81,7 +81,7 @@ class UserRoute
         register_rest_route('cison/v1', '/without-profile-type', [
             'methods' => 'GET',
             'callback' => [UserController::class, 'get_registered_unsigned_users'],
-            'permission_callback' => [],
+            'permission_callback' => [Auth::class, 'jwt'],
         ]);
     }
 }
