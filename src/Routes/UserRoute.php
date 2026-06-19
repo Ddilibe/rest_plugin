@@ -82,6 +82,6 @@ class UserRoute
             'methods' => 'GET',
             'callback' => [UserController::class, 'get_registered_unsigned_users'],
             'permission_callback' => [],
-        ])
+        ]);
     }
 }
