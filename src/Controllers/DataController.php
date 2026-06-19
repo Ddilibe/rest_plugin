@@ -398,4 +398,4 @@ class DataController
             "status" => "success"
         ], 200);
     }
-}
+}   

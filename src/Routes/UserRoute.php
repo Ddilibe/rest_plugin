@@ -8,11 +8,13 @@ use SRC\Middleware\Auth;
 use SRC\Controllers\TransactionController;
 
 
-class UserRoute {
+class UserRoute
+{
 
-    public static function register() {
+    public static function register()
+    {
         global $part_a;
-        $part_a='cison/v1';
+        $part_a = 'cison/v1';
 
 
         register_rest_route('cison/v1', '/all-users', [
@@ -21,17 +23,17 @@ class UserRoute {
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/members', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getGroupMembers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/transiting', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getTransitingMembers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/validtransiting', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getMemebersThatAreTransitingThatHavePaid'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
@@ -41,17 +43,17 @@ class UserRoute {
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/nocertificate', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getMembersThatDoNotHaveCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/certificate', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'allCertificate'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/user', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getUserWithUserId'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
@@ -61,20 +63,25 @@ class UserRoute {
             'permission_callback' => [Auth::class, 'jwt']
         ]);
         register_rest_route('cison/v1', '/validusers', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getValidUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/invalidusers', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [UserController::class, 'getInvalidUsers'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
         register_rest_route('cison/v1', '/transactions', [
-            'methods'=>'GET',
+            'methods' => 'GET',
             'callback' => [TransactionController::class, 'get_transactions'],
             'permission_callback' => [Auth::class, 'jwt'],
             'args' => [TransactionController::class, "get_endpoint_args"]
-        ]);        
+        ]);
+        register_rest_route('cison/v1', '/without-profile-type', [
+            'methods' => 'GET',
+            'callback' => [UserController::class, 'get_registered_unsigned_users'],
+            'permission_callback' => [],
+        ])
     }
 }

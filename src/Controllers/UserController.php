@@ -25,57 +25,60 @@ class UserController
         return rest_ensure_response($users);
     }
 
-    public static function getTransitingMembers() {
+    public static function getTransitingMembers()
+    {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bp_xprofile_data';
 
-        $users = $wpdb->get_results("SELECT * FROM {$table_name}",ARRAY_A);
+        $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
         return rest_ensure_response($users);
     }
 
-    public static function getGroupMembers() {
+    public static function getGroupMembers()
+    {
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'bp_groups_members';
-        
+
         $members = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
         return rest_ensure_response($members);
     }
 
-    public static function getMemebersThatAreTransitingThatHavePaid() {
+    public static function getMemebersThatAreTransitingThatHavePaid()
+    {
         global $wpdb;
 
         $all_data = array();
 
 
         $table_name = $wpdb->prefix . 'users';
-        
+
         $members = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
         $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
 
-        
-        
+
+
         foreach ($members as $value) {
             $user_id = (int) $value["ID"];
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
-            
+
             $is_transiting = bp_get_profile_field_data([
-                'field'   => 1595,
-                'user_id'=> $user_id,
-                ]) === 'Yes';
-                
-            $has_certificate = array_filter($certificates, function($certificate){
+                'field' => 1595,
+                'user_id' => $user_id,
+            ]) === 'Yes';
+
+            $has_certificate = array_filter($certificates, function ($certificate) {
                 return $certificate["user_id"] === $user_id;
             });
 
             $member_id = bp_get_profile_field_data([
-                'field'   => 894,
-                'user_id'=> $user_id,
+                'field' => 894,
+                'user_id' => $user_id,
             ]) ?: '';
 
             if (!$is_transiting) {
@@ -83,8 +86,8 @@ class UserController
             }
 
             $phone_number = bp_get_profile_field_data([
-                'field'   => 5,
-                'user_id'=> $user_id,
+                'field' => 5,
+                'user_id' => $user_id,
             ]);
 
             $firstname = function_exists('bp_get_profile_field_data')
@@ -99,16 +102,16 @@ class UserController
             $paid_fees = Money::cison_get_paid_fees($user_id);
 
             $single_data = array(
-                "user_id"=> $user_id,
-                "first_name"=> $firstname,
-                "middle_name"=> $middlename,
-                "last_name"=> $surname,
-                "user_login"=> $value["user_login"],
-                "user_email"=> $value["user_email"],
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "user_login" => $value["user_login"],
+                "user_email" => $value["user_email"],
                 "joined_date" => $value["user_registered"],
-                "phone_number"=> $phone_number,
-                "display_name"=> $value["display_name"],
-                "member_id"=> $member_id,
+                "phone_number" => $phone_number,
+                "display_name" => $value["display_name"],
+                "member_id" => $member_id,
                 "certificate_validity" => cison_preview_user_eligibility($user_id),
                 "has_certificate" => $has_certificate,
                 "paid_fees" => $paid_fees,
@@ -118,12 +121,13 @@ class UserController
             $all_data[] = $single_data;
         }
 
-        $response = ["data"=>$all_data, "status"=>"success"];
+        $response = ["data" => $all_data, "status" => "success"];
 
-        return rest_ensure_response($response,200);
+        return rest_ensure_response($response, 200);
     }
 
-    public static function getMembersThatHaveCertificate() {
+    public static function getMembersThatHaveCertificate()
+    {
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'users';
@@ -145,27 +149,28 @@ class UserController
             $surname = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
                 : '';
-            $phone_number = function_exists('bp_get_profile_field_data') ?bp_get_profile_field_data([
-                'field'   => 5,
+            $phone_number = function_exists('bp_get_profile_field_data') ? bp_get_profile_field_data([
+                'field' => 5,
                 'user_id' => $user_id,
             ]) : '';
 
             $single_data = array(
-                    "user_id"=> $user_id,
-                    "first_name"=> $firstname,
-                    "middle_name"=> $middlename,
-                    "last_name"=> $surname,
-                    "phone_number"=> $phone_number,
-                    "has_certificate" => $has_certificate,
-                    "certificate_validity" => $certificate_validity
-                );
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "phone_number" => $phone_number,
+                "has_certificate" => $has_certificate,
+                "certificate_validity" => $certificate_validity
+            );
             $all_data[] = $single_data;
         }
 
-        return rest_ensure_response(["data"=>$all_data, "status"=>"success"],200);
+        return rest_ensure_response(["data" => $all_data, "status" => "success"], 200);
     }
 
-    public static function getMembersThatDoNotHaveCertificate() {
+    public static function getMembersThatDoNotHaveCertificate()
+    {
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'users';
@@ -177,8 +182,8 @@ class UserController
 
         foreach ($all_users as $value) {
             $user_id = (int) $value["ID"];
-            
-            $certificate_validity=cison_preview_user_eligibility($user_id);
+
+            $certificate_validity = cison_preview_user_eligibility($user_id);
 
             $has_certificate = array_filter($certificates, function ($certificate) {
                 return $certificate["user_id"] === $user_id;
@@ -199,46 +204,48 @@ class UserController
                 : '';
 
             $is_transiting = bp_get_profile_field_data([
-                'field'   => 1595,
-                'user_id'=> $user_id,
-                ]) === 'Yes';
+                'field' => 1595,
+                'user_id' => $user_id,
+            ]) === 'Yes';
 
             $paid_fees = cison_get_paid_fees($user_id);
 
             $single_data = array(
-                    "user_id"=> $user_id,
-                    "first_name"=> $firstname,
-                    "middle_name"=> $middlename,
-                    "last_name"=> $surname,
-                    "has_certificate" => $has_certificate,
-                    "certificate_validity" => $certificate_validity,
-                    "paid_fees" => $paid_fees,
-                    "is_transiting" => $is_transiting,
-                );
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "has_certificate" => $has_certificate,
+                "certificate_validity" => $certificate_validity,
+                "paid_fees" => $paid_fees,
+                "is_transiting" => $is_transiting,
+            );
             $all_data[] = $single_data;
         }
 
-        return rest_ensure_response(["data"=>$all_data, "status"=>"success"],200);
+        return rest_ensure_response(["data" => $all_data, "status" => "success"], 200);
     }
 
 
-    public static function allCertificate() {
+    public static function allCertificate()
+    {
         global $wpdb;
         $certificates = $wpdb->get_results("SELECT * FROM wprx_cison_certificates", ARRAY_A);
-        return rest_ensure_response(["data"=>$certificates, "status"=>"success"]);
+        return rest_ensure_response(["data" => $certificates, "status" => "success"]);
     }
 
-    public static function getUserWithUserId(WP_REST_REQUEST $request) {
+    public static function getUserWithUserId(WP_REST_REQUEST $request)
+    {
         global $wpdb;
 
         $body = $request->get_json_params();
-        
+
         $user_id = isset($body['user_id']) ? sanitize_text_field($body['user_id']) : '';
         if (!$user_id) {
             return new WP_Error("invalid_id", "user ID is required", ['status' => 400]);
         }
 
-        $certificate_validity=cison_preview_user_eligibility($user_id);
+        $certificate_validity = cison_preview_user_eligibility($user_id);
 
         $certificates = $wpdb->get_results("SELECT * FROM {$CISON_CERT_TABLE}", ARRAY_A);
 
@@ -254,14 +261,14 @@ class UserController
             : '';
 
         $is_transiting = bp_get_profile_field_data([
-            'field'   => 1595,
-            'user_id'=> $user_id,
-            ]) === 'Yes';
-        
+            'field' => 1595,
+            'user_id' => $user_id,
+        ]) === 'Yes';
+
         $member_id = bp_get_profile_field_data([
-                'field'   => 894,
-                'user_id'=> $user_id,
-            ]) ?: '';
+            'field' => 894,
+            'user_id' => $user_id,
+        ]) ?: '';
 
         $paid_fees = cison_get_paid_fees($user_id);
 
@@ -270,26 +277,26 @@ class UserController
         if (function_exists('wc_get_orders')) {
             $orders = wc_get_orders([
                 'customer_id' => $user_id,
-                'status'      => ['completed', 'processing'],
-                'limit'       => -1,
-                'return'      => 'objects',
-                'orderby'     => 'date_completed',
+                'status' => ['completed', 'processing'],
+                'limit' => -1,
+                'return' => 'objects',
+                'orderby' => 'date_completed',
             ]);
             foreach ($orders as $order) {
                 foreach ($order->get_items() as $item) {
                     $pid = (int) $item->get_product_id();
                     $prod = wc_get_product($pid);
-                    $custom_orders[] = ["product_id"=>$pid, "product_name" => $prod->get_name];
+                    $custom_orders[] = ["product_id" => $pid, "product_name" => $prod->get_name];
                 }
             }
         }
         $user_info = get_userdata($user_id);
 
         $single_data = array(
-            "user_id"=> $user_id,
-            "first_name"=> $firstname,
-            "middle_name"=> $middlename,
-            "last_name"=> $surname,
+            "user_id" => $user_id,
+            "first_name" => $firstname,
+            "middle_name" => $middlename,
+            "last_name" => $surname,
             "has_certificate" => $has_certificate,
             "certificate_validity" => $certificate_validity,
             "Joined" => $user_info->user_registered,
@@ -299,10 +306,11 @@ class UserController
             "orders" => $custom_orders,
         );
 
-        return rest_ensure_response(['data'=>$single_data, 'status'=>'success'], 200);
+        return rest_ensure_response(['data' => $single_data, 'status' => 'success'], 200);
     }
 
-    public static function getUserIDWithMemberId(WP_REST_REQUEST $request) {
+    public static function getUserIDWithMemberId(WP_REST_REQUEST $request)
+    {
         global $wpdb;
 
         $body = $request->get_json_params();
@@ -321,14 +329,15 @@ class UserController
 
         if ($user_id) {
             return rest_ensure_response([
-                'user_id' => (int)$user_id, 
-                'status'  => 'success'
+                'user_id' => (int) $user_id,
+                'status' => 'success'
             ], 200);
         }
 
         return new WP_Error("not_found", "No user found with that Member ID", ['status' => 404]);
     }
-    public static function getValidUsers() {
+    public static function getValidUsers()
+    {
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
         $cert_table = CISON_CERT_TABLE;
@@ -350,52 +359,52 @@ class UserController
 
         foreach ($members as $value) {
             $user_id = (int) $value["ID"];
-            
+
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
-            
+
             $is_transiting = bp_get_profile_field_data([
-                'field'   => 1595,
+                'field' => 1595,
                 'user_id' => $user_id,
             ]) === 'Yes';
 
             $member_id = bp_get_profile_field_data([
-                'field'   => 894,
+                'field' => 894,
                 'user_id' => $user_id,
             ]) ?: '';
 
             $phone_number = bp_get_profile_field_data([
-                'field'   => 5,
+                'field' => 5,
                 'user_id' => $user_id,
             ]) ?: '';
 
             $firstname = bp_get_profile_field_data([
-                'field'   => 1,
+                'field' => 1,
                 'user_id' => $user_id
             ]) ?: '';
 
             $middlename = bp_get_profile_field_data([
-                'field'   => 864,
+                'field' => 864,
                 'user_id' => $user_id
             ]) ?: '';
 
             $surname = bp_get_profile_field_data([
-                'field'   => 2,
+                'field' => 2,
                 'user_id' => $user_id
             ]) ?: '';
 
             $single_data = array(
-                "user_id"       => $user_id,
-                "first_name"    => $firstname,
-                "middle_name"   => $middlename,
-                "last_name"     => $surname,
-                "user_login"    => $value["user_login"],
-                "user_email"    => $value["user_email"],
-                "joined_date"   => $value["user_registered"],
-                "phone_number"  => $phone_number,
-                "display_name"  => $value["display_name"],
-                "member_id"     => $member_id,
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "user_login" => $value["user_login"],
+                "user_email" => $value["user_email"],
+                "joined_date" => $value["user_registered"],
+                "phone_number" => $phone_number,
+                "display_name" => $value["display_name"],
+                "member_id" => $member_id,
                 "is_transiting" => $is_transiting,
             );
 
@@ -403,13 +412,14 @@ class UserController
         }
 
         return rest_ensure_response([
-            "data"   => $all_data,
+            "data" => $all_data,
             "status" => "success",
-            "count"  => count($all_data)
+            "count" => count($all_data)
         ], 200);
     }
 
-    public static function getInvalidUsers() {  // Fixed typo: "Inalid" -> "Invalid"
+    public static function getInvalidUsers()
+    {  // Fixed typo: "Inalid" -> "Invalid"
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
         $cert_table = CISON_CERT_TABLE;
@@ -432,52 +442,52 @@ class UserController
 
         foreach ($members as $value) {
             $user_id = (int) $value["ID"];
-            
+
             if (!function_exists('bp_get_profile_field_data')) {
                 continue;
             }
-            
+
             $is_transiting = bp_get_profile_field_data([
-                'field'   => 1595,
+                'field' => 1595,
                 'user_id' => $user_id,
             ]) === 'Yes';
 
             $member_id = bp_get_profile_field_data([
-                'field'   => 894,
+                'field' => 894,
                 'user_id' => $user_id,
             ]) ?: '';
 
             $phone_number = bp_get_profile_field_data([
-                'field'   => 5,
+                'field' => 5,
                 'user_id' => $user_id,
             ]) ?: '';
 
             $firstname = bp_get_profile_field_data([
-                'field'   => 1,
+                'field' => 1,
                 'user_id' => $user_id
             ]) ?: '';
 
             $middlename = bp_get_profile_field_data([
-                'field'   => 864,
+                'field' => 864,
                 'user_id' => $user_id
             ]) ?: '';
 
             $surname = bp_get_profile_field_data([
-                'field'   => 2,
+                'field' => 2,
                 'user_id' => $user_id
             ]) ?: '';
 
             $single_data = array(
-                "user_id"       => $user_id,
-                "first_name"    => $firstname,
-                "middle_name"   => $middlename,
-                "last_name"     => $surname,
-                "user_login"    => $value["user_login"],
-                "user_email"    => $value["user_email"],
-                "joined_date"   => $value["user_registered"],
-                "phone_number"  => $phone_number,
-                "display_name"  => $value["display_name"],
-                "member_id"     => $member_id,
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "user_login" => $value["user_login"],
+                "user_email" => $value["user_email"],
+                "joined_date" => $value["user_registered"],
+                "phone_number" => $phone_number,
+                "display_name" => $value["display_name"],
+                "member_id" => $member_id,
                 "is_transiting" => $is_transiting,
             );
 
@@ -485,9 +495,48 @@ class UserController
         }
 
         return rest_ensure_response([
-            "data"   => $all_data,
+            "data" => $all_data,
             "status" => "success",
-            "count"  => count($all_data)
+            "count" => count($all_data)
         ], 200);
+    }
+
+    static function get_registered_unsigned_users()
+    {
+        $users_with_type = get_objects_in_term(
+            get_terms(
+                array('taxonomy' => 'bp_member_type', 'fields' => 'ids', 'hide_empty' => false)
+            ),
+            'bp_member_type',
+        );
+
+        $user_args = array(
+            'fields' => array('ID', 'user_login', 'user_email', 'display_name'),
+            'exclude' => !empty($users_with_type) ? $users_with_type : array(),
+            'number' => -1
+        );
+
+        $user_query = new WP_User_Query($user_args);
+        $unassigned_users = $user_query->get_results();
+
+        if (empty($unassigned_users)) {
+            return new WP_REST_Response(array('message' => 'All users have a profile type assigned.'), 200);
+        }
+
+        $response_data = array();
+        foreach ($unassigned_users as $user) {
+            $userID = (int) $user->ID;
+            $member_id = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID]) : '';
+            $response_data[] = array(
+                'id' => (int) $user->ID,
+                'username' => $user->user_login,
+                'display_name' => $user->display_name,
+                'email' => $user->user_email,
+                'member_id' => $member_id,
+            );
+        }
+
+        return new WP_REST_Response($response_data, 200);
     }
 }
