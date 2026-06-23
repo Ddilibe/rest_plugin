@@ -21,10 +21,49 @@ class UserController
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'users';
+        $all_data = array();
 
         $users = $wpdb->get_results("SELECT * FROM {$table_name}", ARRAY_A);
 
-        return rest_ensure_response($users);
+        foreach ($users as $value) {
+            $user_id = (int) $value["ID"];
+            if (!function_exists('bp_get_profile_field_data')) {
+                continue;
+            }
+            $member_id = bp_get_profile_field_data([
+                'field' => 894,
+                'user_id' => $user_id,
+            ]) ?: '';
+            $phone_number = bp_get_profile_field_data([
+                'field' => 5,
+                'user_id' => $user_id,
+            ]);
+
+            $firstname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id])
+                : '';
+            $middlename = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id])
+                : '';
+            $surname = function_exists('bp_get_profile_field_data')
+                ? bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id])
+                : '';
+            $single_data = array(
+                "user_id" => $user_id,
+                "first_name" => $firstname,
+                "middle_name" => $middlename,
+                "last_name" => $surname,
+                "user_login" => $value["user_login"],
+                "user_email" => $value["user_email"],
+                "joined_date" => $value["user_registered"],
+                "phone_number" => $phone_number,
+                "display_name" => $value["display_name"],
+                "member_id" => $member_id,
+            );
+            $all_data[] = $single_data;
+        }
+
+        return rest_ensure_response($all_data);
     }
 
     public static function getTransitingMembers()
