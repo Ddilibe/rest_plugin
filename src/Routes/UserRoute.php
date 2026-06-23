@@ -83,5 +83,18 @@ class UserRoute
             'callback' => [UserController::class, 'get_registered_unsigned_users'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/upgrade-statistician/', array(
+            'methods' => 'POST',
+            'callback' => [UserController::class, 'handle_statistician_upgrade_endpoint'],
+            [Auth::class, 'jwt'],
+            'args' => array(
+                'user_id' => array(
+                    'required' => true,
+                    'validate_callback' => function ($param, $request, $key) {
+                        return is_numeric($param);
+                    }
+                ),
+            ),
+        ));
     }
 }
