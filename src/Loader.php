@@ -9,7 +9,7 @@ use SRC\Routes\ProductRoute;
 use SRC\Routes\CertRoute;
 use SRC\Routes\DataRoute;
 use SRC\Routes\CertificationRoute;
-
+use SRC\Routes\LearnRoute;
 
 class Loader
 {
@@ -28,7 +28,7 @@ class Loader
         CertRoute::register();
         DataRoute::register();
         CertificationRoute::register();
-
+        LearnRoute::register();
     }
 }
 
