@@ -45,6 +45,8 @@ class DataController
             ? bp_get_profile_field_data(['field' => 1611, 'user_id' => $userID])
             : '';
 
+        $profile_type = function_exists('bp_get_member_type') ? bp_get_member_type($userID, true) : '';
+
         return [
             "user_id" => $userID,
             "member_id" => $member_id,
@@ -53,7 +55,8 @@ class DataController
             "middle_name" => $middlename,
             "last_name" => $surname,
             "phone_number" => $phone_number,
-            "certificate_name" => $cert_name
+            "certificate_name" => $cert_name,
+            "profile_type" => $profile_type
         ];
 
     }
@@ -278,6 +281,7 @@ class DataController
             $member_id = function_exists('bp_get_profile_field_data')
                 ? bp_get_profile_field_data(['field' => 894, 'user_id' => $userID])
                 : '';
+
             $reg_year = $is_transiting
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
@@ -398,4 +402,4 @@ class DataController
             "status" => "success"
         ], 200);
     }
-}   
+}
