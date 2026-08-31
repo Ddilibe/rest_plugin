@@ -8,6 +8,7 @@ use SRC\Utils\Certificate;
 
 use WP_Error;
 use WP_REST_REQUEST;
+use WC_Order
 
 
 define('CISON_CURRENT_YEAR', (int) date('Y'));
@@ -401,5 +402,66 @@ class DataController
             "group" => $profile_groups,
             "status" => "success"
         ], 200);
+    }
+    public static function get_all_orders()
+    {
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
+
+        
+        $args = [
+            'limit' => -1,
+            'return' => 'objects',
+        ];
+
+        $orders_query = new WC_Order_Query($args);
+        $orders = $orders_query->get_orders();
+
+        if (empty($orders)) {
+            return rest_ensure_response([]);
+        }
+
+        $formatted_orders = [];
+
+        // Loop through each order and extract only what you need (making it super lightweight)
+        foreach ($orders as $order) {
+            $items = [];
+
+            // Loop through items inside the order
+            foreach ($order->get_items() as $item_id => $item) {
+                $items[] = [
+                    'product_id' => $item->get_product_id(),
+                    'name' => $item->get_name(),
+                    'quantity' => $item->get_quantity(),
+                    'subtotal' => $item->get_subtotal(),
+                    'total' => $item->get_total(),
+                ];
+            }
+
+            $formatted_orders[] = [
+                'order_id' => $order->get_id(),
+                'order_number' => $order->get_order_number(),
+                'status' => $order->get_status(),
+                'date_created' => $order->get_date_created() ? $order->get_date_created()->date('Y-m-d H:i:s') : '',
+                'total' => $order->get_total(),
+                'currency' => $order->get_currency(),
+                'customer_id' => $order->get_customer_id(),
+                'customer_note' => $order->get_customer_note(),
+                'billing' => [
+                    'first_name' => $order->get_billing_first_name(),
+                    'last_name' => $order->get_billing_last_name(),
+                    'email' => $order->get_billing_email(),
+                    'phone' => $order->get_billing_phone(),
+                    'address' => $order->get_billing_address_1(),
+                    'city' => $order->get_billing_city(),
+                    'state' => $order->get_billing_state(),
+                    'postcode' => $order->get_billing_postcode(),
+                    'country' => $order->get_billing_country(),
+                ],
+                'line_items' => $items
+            ];
+        }
+
+        return rest_ensure_response($formatted_orders);
     }
 }

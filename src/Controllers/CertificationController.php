@@ -28,6 +28,44 @@ class CertificationController
     }
 
     /**
+     * Upload a certificate file to the private certificates directory.
+     */
+    public function handle_upload_certificate(WP_REST_Request $request)
+    {
+        if (empty($_FILES['certificate_file'])) {
+            return new WP_Error('missing_file', 'A certificate file is required.', array('status' => 400));
+        }
+
+        $target_dir = WP_CONTENT_DIR . '/private/certificates/';
+
+        if (!file_exists($target_dir)) {
+            wp_mkdir_p($target_dir);
+        }
+
+        $file = $_FILES['certificate_file'];
+
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            return new WP_Error('upload_error', 'Upload failed with error code: ' . $file['error'], array('status' => 500));
+        }
+
+        $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($file['name']));
+        $destination = $target_dir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            return new WP_Error('upload_error', 'Could not move the uploaded file to the target directory.', array('status' => 500));
+        }
+
+        $file_url = content_url('/private/certificates/' . $filename);
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'file_name' => $filename,
+            'file_path' => $destination,
+            'file_url' => $file_url,
+        ), 200);
+    }
+
+    /**
      * Update an existing certificate record or its file.
      */
     public function handle_update_certificate(WP_REST_Request $request)

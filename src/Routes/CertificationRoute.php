@@ -29,6 +29,18 @@ class CertificationRoute
         );
         register_rest_route(
             $main_route,
+            '/upload',
+            [
+                'methods' => 'POST',
+                'callback' => function (WP_REST_Request $request) {
+                    $cert = new CertificationController();
+                    return $cert->handle_upload_certificate($request);
+                },
+                'permission_callback' => [Auth::class, 'jwt']
+            ]
+        );
+        register_rest_route(
+            $main_route,
             '/update',
             [
                 'methods' => 'PUT',
