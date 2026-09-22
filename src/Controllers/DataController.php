@@ -240,6 +240,7 @@ class DataController
             $reg_year = $is_transiting
                 ? 2023
                 : ($member_id ? max(2024, min((int) substr($member_id, 0, 4), 2025)) : 2025);
+            $dob = function_exists('bp_get_profile_field_data')? bp_get_profile_field_data(['field' => 561, 'user_id' => $userID]) : '';
 
             $required = cison_get_required_fees($is_transiting, $reg_year, false, false);
             $paid = cison_get_paid_fees($userID);
@@ -255,6 +256,7 @@ class DataController
                     $user_data['member_id'] = $member_id;
                     $user_data['reg_year'] = $reg_year;
                     $user_data['profile_type'] = $profile_type;
+                    $user_data['dob'] = $dob;
                 }
                 $toSend[] = $user_data;
             }
