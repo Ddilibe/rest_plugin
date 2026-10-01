@@ -35,12 +35,14 @@ class CertRoute
             'methods' => 'POST',
             'callback' => [CertController::class, 'add2025Conference'],
             'permission_callback' => [Auth::class, 'jwt'],
+            'args' => CertController::get2025RegistrationArgs(),
         ]);
 
         register_rest_route($part_a, '/add-2025-preconference', [
             'methods' => 'POST',
             'callback' => [CertController::class, 'add2025PreConference'],
             'permission_callback' => [Auth::class, 'jwt'],
+            'args' => CertController::get2025RegistrationArgs(),
         ]);
 
         register_rest_route($part_a, '/get-2025-preconference', [

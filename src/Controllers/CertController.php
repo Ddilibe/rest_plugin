@@ -227,10 +227,26 @@ class CertController
         global $wpdb;
         $body = $request->get_json_params();
 
+        if (!is_array($body)) {
+            $body = [];
+        }
+
         // Validate required fields
         if (empty($body['email'])) {
             return new WP_Error('invalid_data', 'Email is required', ['status' => 400]);
         }
+
+        // A registration without a name is not a registration. Enforced in the
+        // handler as well as in the route schema so a direct call cannot write
+        // one.
+        $names = self::getRequiredNames($body);
+
+        if (is_wp_error($names)) {
+            return $names;
+        }
+
+        [$first_name, $surname] = $names;
+
         $email = sanitize_email($body['email']);
         $table_name = $wpdb->prefix . 'cison_conference_2025';
 
@@ -250,8 +266,19 @@ class CertController
             return new WP_Error('already_exists', 'Record already exists for this email', ['status' => 400]);
         }
 
-        $filename = $body['cert_name'];
-        $file_url = content_url('private/conference/' . $filename);
+        $filename = '';
+
+        if (isset($body['cert_name']) && $body['cert_name'] !== '') {
+            $name_check = self::validateCertificateFileName($body['cert_name']);
+
+            if (is_wp_error($name_check)) {
+                return new WP_Error('invalid_data', $name_check->get_error_message(), ['status' => 400]);
+            }
+
+            $filename = self::sanitizeCertificateFileName($body['cert_name']);
+        }
+
+        $file_url = $filename !== '' ? content_url('private/conference/' . $filename) : '';
         // $file_path = WP_CONTENT_DIR . '/private/preconference/' . $filename;
 
         $cert_id = uniqid('cert-', true);
@@ -260,24 +287,26 @@ class CertController
 
         $cert_url = rest_url('api/v1/certificate/' . $cert_id);
 
+        // Every field is guarded: the route schema advertises these as optional,
+        // so an omitted field must not raise "Undefined array key" here.
         $saved = $wpdb->insert(
             $table_name,
             [
-                'order_id' => $body['order_id'],
-                'member_id' => $body['member_id'],
-                'first_name' => $body['first_name'],
-                'last_name' => $body['surname'],
-                'item_name' => $body['item_name'],
-                'item_price' => $body['item_price'],
-                'order_total' => $body['order_total'],
-                'status' => $body['status'],
-                'paid_date' => $body['paid_date'],
-                'email' => $body['email'],
-                'phone' => $body['phone'],
-                'payment_method' => $body['payment_method'],
-                'transaction_id' => $body['transaction_id'],
-                'order_link' => $body['order_link'],
-                'billing_state' => $body['billing_state'],
+                'order_id' => isset($body['order_id']) ? absint($body['order_id']) : 0,
+                'member_id' => isset($body['member_id']) ? sanitize_text_field($body['member_id']) : '',
+                'first_name' => $first_name,
+                'last_name' => $surname,
+                'item_name' => isset($body['item_name']) ? sanitize_text_field($body['item_name']) : '',
+                'item_price' => isset($body['item_price']) ? (float) $body['item_price'] : 0.00,
+                'order_total' => isset($body['order_total']) ? (float) $body['order_total'] : 0.00,
+                'status' => isset($body['status']) ? sanitize_text_field($body['status']) : '',
+                'paid_date' => self::toMySqlDateTime(isset($body['paid_date']) ? $body['paid_date'] : ''),
+                'email' => $email,
+                'phone' => isset($body['phone']) ? sanitize_text_field($body['phone']) : '',
+                'payment_method' => isset($body['payment_method']) ? sanitize_text_field($body['payment_method']) : '',
+                'transaction_id' => isset($body['transaction_id']) ? sanitize_text_field($body['transaction_id']) : '',
+                'order_link' => isset($body['order_link']) ? esc_url_raw($body['order_link']) : '',
+                'billing_state' => isset($body['billing_state']) ? sanitize_text_field($body['billing_state']) : '',
                 'cert_url' => $file_url,
                 'last_updated' => time(),
             ],
@@ -294,22 +323,238 @@ class CertController
         ]);
     }
 
-    public static function add2025PreConference(WP_REST_REQUEST $request)
+    /**
+     * Body schema shared by POST /cert/add-2025-preconference and
+     * POST /cert/add-2025-conference.
+     *
+     * The two endpoints record the same payload into structurally identical
+     * tables, so they share one schema. That is deliberate: when each route
+     * carried its own (or none), the endpoints silently drifted and the
+     * conference one was left accepting nameless, unsanitised registrants.
+     *
+     * Returned as a plain map keyed by parameter name. register_rest_route()
+     * only applies a schema in that form: WP_REST_Request::has_valid_params()
+     * iterates the map as $key => $arg, so a [Class, 'method'] callable is
+     * silently ignored and nothing gets validated.
+     *
+     * 'email', 'first_name' and 'surname' are required. Every other field is
+     * optional and defaults to a safe empty value, which keeps the request
+     * contract as narrow as the data it records while guaranteeing no field
+     * reaches the database uncast.
+     */
+    public static function get2025RegistrationArgs()
+    {
+        $text = [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+        ];
+
+        // The names are mandatory, so they get a sanitiser that also rejects a
+        // value which is blank once trimmed. 'required' alone is not enough:
+        // has_valid_params() runs before sanitize_params(), so "   " satisfies
+        // required and only sanitises down to '' afterwards.
+        $name = [
+            'type' => 'string',
+            'required' => true,
+            'sanitize_callback' => [self::class, 'sanitizeRequiredText'],
+        ];
+
+        return [
+            'email' => [
+                'type' => 'string',
+                'required' => true,
+                'sanitize_callback' => 'sanitize_email',
+            ],
+            'order_id' => [
+                'type' => 'integer',
+            ],
+            'cert_name' => [
+                'type' => 'string',
+                'sanitize_callback' => [self::class, 'sanitizeCertificateFileName'],
+                'validate_callback' => [self::class, 'validateCertificateFileName'],
+            ],
+            'item_price' => [
+                'type' => 'number',
+            ],
+            'order_total' => [
+                'type' => 'number',
+            ],
+            'order_link' => [
+                'type' => 'string',
+                'sanitize_callback' => 'esc_url_raw',
+            ],
+            'paid_date' => [
+                'type' => 'string',
+                'validate_callback' => [self::class, 'validateDateTimeParam'],
+            ],
+            'member_id' => $text,
+            'first_name' => $name,
+            'surname' => $name,
+            'item_name' => $text,
+            'status' => $text,
+            'phone' => $text,
+            'payment_method' => $text,
+            'transaction_id' => $text,
+            'billing_state' => $text,
+        ];
+    }
+
+    /**
+     * Sanitise a mandatory free-text field, rejecting a value that trims to empty.
+     *
+     * Returning a WP_Error from a sanitize_callback is supported: WP_REST_Request
+     * collects it into the 400 rest_invalid_param response for that parameter.
+     */
+    public static function sanitizeRequiredText($value, $request = null, $key = null)
+    {
+        $clean = sanitize_text_field($value);
+
+        if ($clean === '') {
+            return new WP_Error(
+                'rest_invalid_param',
+                sprintf('%s is required and must not be blank.', $key),
+                ['status' => 400]
+            );
+        }
+
+        return $clean;
+    }
+
+    /**
+     * Sanitise the mandatory name fields.
+     *
+     * Enforced in the handlers as well as in the route schema so a direct call
+     * cannot write a nameless registrant.
+     *
+     * @param array $body Decoded JSON body.
+     * @return array|WP_Error `[$first_name, $surname]`, or the first failure.
+     */
+    public static function getRequiredNames($body)
+    {
+        $first_name = isset($body['first_name']) ? sanitize_text_field($body['first_name']) : '';
+        $surname = isset($body['surname']) ? sanitize_text_field($body['surname']) : '';
+
+        foreach (['first_name' => $first_name, 'surname' => $surname] as $field => $value) {
+            if ($value === '') {
+                // The param name, not a prose label: this error code carries no
+                // 'params' map, so the message is the only place the caller can
+                // learn which field was rejected.
+                return new WP_Error('invalid_data', $field . ' is required', ['status' => 400]);
+            }
+        }
+
+        return [$first_name, $surname];
+    }
+
+    /**
+     * Reduce a caller-supplied certificate name to a bare file name.
+     *
+     * sanitize_file_name() strips directory separators and every character
+     * outside [A-Za-z0-9._-], so path traversal cannot survive.
+     */
+    public static function sanitizeCertificateFileName($value)
+    {
+        return sanitize_file_name((string) $value);
+    }
+
+    /**
+     * Reject anything that is not a bare file name.
+     *
+     * The raw value is checked, not the sanitised one: sanitize_file_name()
+     * would silently turn "../../evil.pdf" into "evil.pdf", hiding the caller's
+     * bug and returning a cert_url for a different file than the one asked
+     * for. A name, not a path, is the contract.
+     */
+    public static function validateCertificateFileName($value, $request = null, $key = null)
+    {
+        $raw = (string) $value;
+
+        if (strpos($raw, '..') !== false) {
+            return new WP_Error('rest_invalid_param', 'cert_name must not contain path traversal sequences.', ['status' => 400]);
+        }
+
+        if (strpbrk($raw, '/\\') !== false) {
+            return new WP_Error('rest_invalid_param', 'cert_name must be a file name, not a path.', ['status' => 400]);
+        }
+
+        if (self::sanitizeCertificateFileName($raw) === '') {
+            return new WP_Error('rest_invalid_param', 'cert_name must contain a file name.', ['status' => 400]);
+        }
+
+        return true;
+    }
+
+    public static function validateDateTimeParam($value, $request = null, $key = null)
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return true;
+        }
+
+        if (self::toMySqlDateTime($value) !== null) {
+            return true;
+        }
+
+        return new WP_Error('rest_invalid_param', 'Could not parse value as a date/time.', ['status' => 400]);
+    }
+
+    /**
+     * Normalise a caller-supplied date into `Y-m-d H:i:s` for a DATETIME column.
+     *
+     * Values already in MySQL format pass through untouched so existing
+     * callers' timestamps are not shifted by a timezone conversion. Returns
+     * null when the value is empty or cannot be parsed.
+     */
+    public static function toMySqlDateTime($value)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+            return $value;
+        }
+
+        $timestamp = strtotime($value);
+
+        return $timestamp ? wp_date('Y-m-d H:i:s', $timestamp) : null;
+    }
+
+    public static function add2025PreConference(WP_REST_Request $request)
     {
         global $wpdb;
+
         $body = $request->get_json_params();
 
-        // Validate required fields
-        if (empty($body['email'])) {
+        if (!is_array($body)) {
+            $body = [];
+        }
+
+        // Sanitise once, then use the sanitised value for both the duplicate
+        // check and the insert. Previously the lookup used the sanitised value
+        // while the raw request body was written to the row.
+        $email = isset($body['email']) ? sanitize_email($body['email']) : '';
+
+        if (empty($email)) {
             return new WP_Error('invalid_data', 'Email is required', ['status' => 400]);
         }
 
-        $email = sanitize_email($body['email']);
+        // Enforced again here, not just in the route schema, so a direct call
+        // cannot write a nameless registrant.
+        $names = self::getRequiredNames($body);
+
+        if (is_wp_error($names)) {
+            return $names;
+        }
+
+        [$first_name, $surname] = $names;
+
         $table_name = $wpdb->prefix . 'cison_preconference_2025';
 
-        $existing = $wpdb->get_row(
+        $existing = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT email FROM {$table_name} WHERE email = %s LIMIT 1",
+                "SELECT id FROM {$table_name} WHERE email = %s LIMIT 1",
                 $email
             )
         );
@@ -318,42 +563,59 @@ class CertController
             return new WP_Error('already_exists', 'Record already exists for this email', ['status' => 400]);
         }
 
-        $filename = $body['cert_name'];
-        $file_url = content_url('private/preconference/' . $filename);
-        // $file_path = WP_CONTENT_DIR . '/private/preconference/' . $filename;
+        $filename = '';
 
-        $saved = $wpdb->insert(
-            $table_name,
-            [
-                'order_id' => $body['order_id'],
-                'member_id' => $body['member_id'],
-                'first_name' => $body['first_name'],
-                'last_name' => $body['surname'],
-                'item_name' => $body['item_name'],
-                'item_price' => $body['item_price'],
-                'order_total' => $body['order_total'],
-                'status' => $body['status'],
-                'paid_date' => $body['paid_date'],
-                'email' => $body['email'],
-                'phone' => $body['phone'],
-                'payment_method' => $body['payment_method'],
-                'transaction_id' => $body['transaction_id'],
-                'order_link' => $body['order_link'],
-                'billing_state' => $body['billing_state'],
-                'cert_url' => $file_url,
-                'last_updated' => time(),
-            ],
-            ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
-        );
+        if (isset($body['cert_name']) && $body['cert_name'] !== '') {
+            $name_check = self::validateCertificateFileName($body['cert_name']);
+
+            if (is_wp_error($name_check)) {
+                return new WP_Error('invalid_data', $name_check->get_error_message(), ['status' => 400]);
+            }
+
+            $filename = self::sanitizeCertificateFileName($body['cert_name']);
+        }
+
+        $data = [
+            'order_id' => isset($body['order_id']) ? absint($body['order_id']) : 0,
+            'member_id' => isset($body['member_id']) ? sanitize_text_field($body['member_id']) : '',
+            'first_name' => $first_name,
+            'last_name' => $surname,
+            'item_name' => isset($body['item_name']) ? sanitize_text_field($body['item_name']) : '',
+            'item_price' => isset($body['item_price']) ? (float) $body['item_price'] : 0.00,
+            'order_total' => isset($body['order_total']) ? (float) $body['order_total'] : 0.00,
+            'status' => isset($body['status']) ? sanitize_text_field($body['status']) : '',
+            'paid_date' => self::toMySqlDateTime(isset($body['paid_date']) ? $body['paid_date'] : ''),
+            'email' => $email,
+            'phone' => isset($body['phone']) ? sanitize_text_field($body['phone']) : '',
+            'payment_method' => isset($body['payment_method']) ? sanitize_text_field($body['payment_method']) : '',
+            'transaction_id' => isset($body['transaction_id']) ? sanitize_text_field($body['transaction_id']) : '',
+            'order_link' => isset($body['order_link']) ? esc_url_raw($body['order_link']) : '',
+            'billing_state' => isset($body['billing_state']) ? sanitize_text_field($body['billing_state']) : '',
+            'cert_url' => $filename !== '' ? content_url('private/preconference/' . $filename) : '',
+        ];
+
+        // Positional, one entry per key in $data. "%f" for the money columns:
+        // "%d" previously truncated 150.50 to 150.
+        //
+        // last_updated is deliberately omitted. The column is
+        // TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, and
+        // writing a Unix epoch integer into it is an invalid datetime that
+        // fails outright under MySQL strict mode.
+        $formats = ['%d', '%s', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'];
+
+        $saved = $wpdb->insert($table_name, $data, $formats);
 
         if ($saved === false) {
+            error_log('CISON: Failed to save pre-conference record: ' . $wpdb->last_error);
 
-            return new WP_Error('save_failed', 'DB Error: ' . $wpdb->last_error, ['status' => 500]);
+            return new WP_Error('save_failed', 'Failed to save pre-conference record', ['status' => 500]);
         }
 
         return rest_ensure_response([
             'status' => 'success',
-            'message' => 'Pre-conference registration saved successfully'
+            'message' => 'Pre-conference registration saved successfully',
+            'id' => (int) $wpdb->insert_id,
+            'cert_url' => $data['cert_url'],
         ]);
     }
 

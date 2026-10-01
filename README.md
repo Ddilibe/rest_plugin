@@ -28,9 +28,24 @@ This plugin provides a modular REST API for WordPress, featuring JWT-based authe
 All endpoints are prefixed with `/wp-json/cison/v1/`.
 
 - `GET /docs` - Retrieve Swagger JSON documentation.
-- Authentication endpoints (via AuthController)
-- User management endpoints (via UserController)
-- Hello endpoint (via HelloController)
+- `POST /auth/api-key` - Issue a JWT (see [docs/authentication.md](docs/authentication.md)).
+- `POST /cert/add-2025-preconference` - Record a 2025 pre-conference registration (see
+  [docs/endpoints/add-2025-preconference.md](docs/endpoints/add-2025-preconference.md)).
+- User, product, certificate, transaction and data endpoints.
+
+## Documentation
+
+Full reference documentation lives in [`docs/`](docs/README.md):
+
+| Document | Contents |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | Bootstrap, autoloading, route registration, BuddyBoss bypass |
+| [docs/authentication.md](docs/authentication.md) | JWT issuing and validation, the allow-list |
+| [docs/configuration.md](docs/configuration.md) | Constants, environment variables, deployment checklist |
+| [docs/api-reference.md](docs/api-reference.md) | Every registered endpoint |
+| [docs/endpoints/add-2025-preconference.md](docs/endpoints/add-2025-preconference.md) | Detailed reference for the pre-conference write endpoint |
+| [docs/data-model.md](docs/data-model.md) | Tables, xprofile field IDs, fee resolution |
+| [docs/known-issues.md](docs/known-issues.md) | Defects and caveats, by severity |
 
 ### Authentication
 
