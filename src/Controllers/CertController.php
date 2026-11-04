@@ -712,6 +712,63 @@ class CertController
         ], 200);
     }
 
+    public static function getCertName(WP_REST_REQUEST $request)
+    {
+        global $wpdb;
+
+        $member_id = sanitize_text_field((string) $request->get_param('member_id'));
+
+        if ($member_id === '') {
+            return new WP_Error('invalid_id', 'Member ID is required', ['status' => 400]);
+        }
+
+        $table_name = $wpdb->prefix . 'bp_xprofile_data';
+        $user_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT user_id FROM {$table_name} WHERE field_id = %d AND value = %s LIMIT 1",
+            894,
+            $member_id
+        ));
+
+        if (empty($user_id)) {
+            return new WP_Error('not_found', "No user found with Member ID: {$member_id}", ['status' => 404]);
+        }
+
+        $user = get_userdata($user_id);
+
+        if (!$user) {
+            return new WP_Error('not_found', "No user found with Member ID: {$member_id}", ['status' => 404]);
+        }
+
+        $firstname = function_exists('bp_get_profile_field_data')
+            ? (bp_get_profile_field_data(['field' => 1, 'user_id' => $user_id]) ?: '')
+            : '';
+        $middlename = function_exists('bp_get_profile_field_data')
+            ? (bp_get_profile_field_data(['field' => 864, 'user_id' => $user_id]) ?: '')
+            : '';
+        $surname = function_exists('bp_get_profile_field_data')
+            ? (bp_get_profile_field_data(['field' => 2, 'user_id' => $user_id]) ?: '')
+            : '';
+        $certificate_name = function_exists('bp_get_profile_field_data')
+            ? (bp_get_profile_field_data(['field' => 1611, 'user_id' => $user_id]) ?: '')
+            : '';
+
+        $data = [
+            'first_name' => $firstname,
+            'middle_name' => $middlename,
+            'last_name' => $surname,
+            'email' => $user->user_email,
+        ];
+
+        if ($certificate_name !== '') {
+            $data['certificate_name'] = $certificate_name;
+        }
+
+        return rest_ensure_response([
+            'data' => $data,
+            'status' => 'success'
+        ], 200);
+    }
+
     public static function get_qualified_certificates(WP_REST_REQUEST $request)
     {
         global $wpdb;
