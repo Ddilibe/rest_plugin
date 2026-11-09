@@ -112,7 +112,7 @@ class StudentCertificateController
                 continue;
             }
 
-            $paid = Money::cison_get_paid_fees($user_id);
+            $paid = cison_get_paid_fees($user_id);
 
             if (Money::getArrayCount($paid) !== 1) {
                 continue;
