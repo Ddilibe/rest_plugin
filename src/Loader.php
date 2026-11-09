@@ -11,6 +11,7 @@ use SRC\Routes\DataRoute;
 use SRC\Routes\CertificationRoute;
 use SRC\Routes\LearnRoute;
 use SRC\Routes\ConferenceRegistrationRoute;
+use SRC\Routes\StudentCertificateRoute;
 
 class Loader
 {
@@ -31,6 +32,7 @@ class Loader
         CertificationRoute::register();
         LearnRoute::register();
         ConferenceRegistrationRoute::register();
+        StudentCertificateRoute::register();
     }
 }
 
