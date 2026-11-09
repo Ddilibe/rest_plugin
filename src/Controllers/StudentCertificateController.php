@@ -32,23 +32,8 @@ class StudentCertificateController
             return false;
         }
 
-        $types = function_exists('bp_get_member_type') ? bp_get_member_type($user_id, true) : '';
-
-        if (is_array($types)) {
-            $types = implode(' ', $types);
-        }
-
-        if ($types !== '' && stripos((string) $types, 'student') !== false) {
-            return true;
-        }
-
-        $profile_type = get_user_meta($user_id, 'bp_profile_type', true);
-
-        if (is_array($profile_type)) {
-            $profile_type = implode(' ', $profile_type);
-        }
-
-        return stripos((string) $profile_type, 'student') !== false;
+        $member_type_bp = bp_get_member_type($user_id);
+        return $member_type_bp === 'student-member';
     }
 
     private static function get_member_id($user_id)
