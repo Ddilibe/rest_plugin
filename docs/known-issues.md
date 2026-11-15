@@ -83,6 +83,36 @@ curl -X POST 'https://example.com/wp-json/cison/v1/upgrade-statistician/' \
 real capability check rather than relying on the route alone. The `'args'` map on this route is
 correctly keyed, so it does apply.
 
+### `POST /upgrade-fellow/` is unauthenticated
+
+`src/Routes/UserRoute.php:99-111`
+
+The fellow upgrade endpoint copies the positional-key mistake of `/upgrade-statistician/` verbatim:
+
+```php
+register_rest_route('cison/v1', '/upgrade-fellow/', array(
+    'methods' => 'POST',
+    'callback' => [UserController::class, 'handle_fellow_upgrade_endpoint'],
+    [Auth::class, 'jwt'],              // ← array element 0, not 'permission_callback' => …
+    'args' => array( /* … */ ),
+));
+```
+
+`[Auth::class, 'jwt']` is a numeric-keyed element, so the permission callback is silently dropped
+and `WP_REST_Server::dispatch()` runs the handler without any authorisation check.
+
+`UserController::handle_fellow_upgrade_endpoint()` (`UserController.php:616`) converts an arbitrary
+user to the BuddyBoss member type `fellow` and writes `bp_profile_type` user meta. Its only guard is
+`$user_id === 1`, so any anonymous caller can promote any other account:
+
+```bash
+curl -X POST 'https://example.com/wp-json/cison/v1/upgrade-fellow/' \
+  -H 'Content-Type: application/json' -d '{"user_id":42}'
+```
+
+**Fix:** `'permission_callback' => [Auth::class, 'jwt'],` — and a real capability check in the
+handler. The `'args'` map on this route is correctly keyed, so it does apply.
+
 ### ~~Unvalidated, unsanitised registration payloads are persisted~~ — fixed for pre-conference
 
 **Fixed for `POST /cert/add-2025-preconference`.** `POST /cert/add-2025-conference` still has every
@@ -379,7 +409,7 @@ registered on any route, and returns a `WP_Error` rather than a boolean — not 
   `"WC_Product::__get"` instead of the product name.
 - `UserController.php:6` — `use SRC\Utils\money;` (lowercase) against the class `Money`. Works only
   because PHP class names are case-insensitive. `Certificate` is imported but unused.
-- `UserController.php:545`, `:584` — two methods are `static` without `public`.
+- `UserController.php:545`, `:584`, `:616` — methods are `static` without `public`.
 - `TransactionController.php:170` passes a float to `X-WP-TotalPages`.
 - `CertController.php:237-251` — the duplicate-email check in `add2025Conference` is written twice;
   the second is unreachable.

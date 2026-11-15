@@ -33,6 +33,7 @@ All paths are relative to the namespace root. With pretty permalinks the full UR
 | GET | [/invalidusers](#invalidusers) | 🔒 | `UserController::getInvalidUsers` |
 | GET | [/without-profile-type](#without-profile-type) | 🔒 | `UserController::get_registered_unsigned_users` |
 | POST | [/upgrade-statistician/](#upgrade-statistician) | 🔓 | `UserController::handle_statistician_upgrade_endpoint` |
+| POST | [/upgrade-fellow/](#upgrade-fellow) | 🔓 | `UserController::handle_fellow_upgrade_endpoint` |
 | GET | [/transactions](#transactions) | 🔒 | `TransactionController::get_transactions` |
 | GET | [/conference-registrations](#conference-registrations) | 🔒 | `ConferenceRegistrationController::get_transactions` |
 | GET | [/prod/all-products](#prodall-products) | 🔒 | `ProductController::getAllProducts` |
@@ -299,6 +300,27 @@ promote any other account.
 | 200 | `{ "success": true, "message": "User ID 2695 successfully converted to registered statistician." }` |
 | 403 | Refuses `user_id === 1` |
 | 404 | `{ "code": "not_found", ... }` unknown user |
+| 400 | `user_id` missing or non-numeric |
+
+## upgrade-fellow
+
+**`POST /upgrade-fellow/`** 🔓 — `UserController::handle_fellow_upgrade_endpoint`
+
+⚠️ **Not actually authenticated** — the route array at `src/Routes/UserRoute.php:99-111` repeats the
+positional-key bug of its statistician sibling, so `[Auth::class, 'jwt']` is dropped and WordPress
+skips the permission check. See
+[known-issues.md](known-issues.md#post-upgrade-fellow-is-unauthenticated).
+
+`user_id` (integer, required, validated numeric — the `args` map is correctly keyed, so it applies).
+
+Converts the user to the BuddyBoss member type `fellow` and writes `bp_profile_type` user meta. The
+only guard is `$user_id === 1`.
+
+| Status | Response |
+| --- | --- |
+| 200 | `{ "success": true, "message": "User ID 2695 successfully converted to fellow." }` |
+| 403 | Refuses `user_id === 1` |
+| 404 | `{ "code": "invalid_user", ... }` unknown user |
 | 400 | `user_id` missing or non-numeric |
 
 ## transactions
