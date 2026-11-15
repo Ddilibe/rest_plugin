@@ -612,4 +612,34 @@ class UserController
             'message' => "User ID {$user_id} successfully converted to registered statistician.",
         ), 200);
     }
+
+    static function handle_fellow_upgrade_endpoint(WP_REST_Request $request)
+    {
+        $user_id = absint($request->get_param('user_id'));
+
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return new WP_Error('invalid_user', 'The specified user does not exist.', array('status' => 404));
+        }
+
+        if ($user_id === 1) {
+            return new WP_Error('protected_user', 'Action denied: Cannot downgrade the primary administrator.', array('status' => 403));
+        }
+
+        $bb_type = 'fellow';
+
+        if (function_exists('bp_set_member_type')) {
+            bp_set_member_type($user_id, $bb_type);
+            update_user_meta($user_id, 'bp_profile_type', $bb_type);
+        } else {
+            error_log('Endpoint Warning: BuddyBoss component not active during user upgrade.');
+        }
+
+        clean_user_cache($user_id);
+
+        return new WP_REST_Response(array(
+            'success' => true,
+            'message' => "User ID {$user_id} successfully converted to fellow.",
+        ), 200);
+    }
 }

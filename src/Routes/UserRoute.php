@@ -96,5 +96,18 @@ class UserRoute
                 ),
             ),
         ));
+        register_rest_route('cison/v1', '/upgrade-fellow/', array(
+            'methods' => 'POST',
+            'callback' => [UserController::class, 'handle_fellow_upgrade_endpoint'],
+            [Auth::class, 'jwt'],
+            'args' => array(
+                'user_id' => array(
+                    'required' => true,
+                    'validate_callback' => function ($param, $request, $key) {
+                        return is_numeric($param);
+                    }
+                ),
+            ),
+        ));
     }
 }
