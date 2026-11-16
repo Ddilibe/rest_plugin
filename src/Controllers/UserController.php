@@ -350,6 +350,160 @@ class UserController
         return rest_ensure_response(['data' => $single_data, 'status' => 'success'], 200);
     }
 
+    public static function getUserProfile(WP_REST_REQUEST $request)
+    {
+        $body = $request->get_json_params();
+        $user_id = isset($body['user_id']) ? $body['user_id'] : $request->get_param('user_id');
+        $user_id = is_scalar($user_id) ? absint($user_id) : 0;
+
+        if (!$user_id) {
+            return new WP_Error("invalid_id", "user ID is required", ['status' => 400]);
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return new WP_Error("not_found", "No user found with that ID", ['status' => 404]);
+        }
+
+        $professional_qualification = self::getQualificationValue($user_id, 'professional', 0);
+        if ($professional_qualification === '') {
+            $professional_qualification = self::getProfileValue($user_id, 1614);
+        }
+        if ($professional_qualification === '') {
+            $professional_qualification = self::getProfileValue($user_id, 1425);
+        }
+
+        $profile = array(
+            "user_id" => $user_id,
+            "title" => self::getProfileValue($user_id, 538),
+            "first_name" => self::getProfileValue($user_id, 1),
+            "last_name" => self::getProfileValue($user_id, 2),
+            "middle_name" => self::getProfileValue($user_id, 864),
+            "email" => $user->user_email,
+            "phone_number" => self::getProfileValue($user_id, 5),
+            "address" => array(
+                "address_1" => self::getProfileValue($user_id, 22),
+                "address_2" => self::getProfileValue($user_id, 23),
+                "city" => self::getProfileValue($user_id, 24),
+                "state" => self::getProfileValue($user_id, 276),
+                "postcode" => self::getProfileValue($user_id, 25),
+                "country" => self::getProfileValue($user_id, 917),
+            ),
+            "professional_qualification" => $professional_qualification,
+            "academic_qualification" => self::getQualificationValue($user_id, 'academic', 859),
+            "gender" => self::normalizeGender(self::getProfileValue($user_id, 557)),
+            "cison_number" => self::getProfileValue($user_id, 894),
+        );
+
+        return rest_ensure_response(['data' => $profile, 'status' => 'success'], 200);
+    }
+
+    public static function getUserIdsByBpType(WP_REST_REQUEST $request)
+    {
+        $body = $request->get_json_params();
+        $bp_type = isset($body['bp_type']) ? $body['bp_type'] : $request->get_param('bp_type');
+        $bp_type = is_scalar($bp_type) ? sanitize_key($bp_type) : '';
+
+        if ($bp_type === '') {
+            return new WP_Error("invalid_bp_type", "bp_type is required", ['status' => 400]);
+        }
+
+        $term = get_term_by('slug', $bp_type, 'bp_member_type');
+        if (!$term) {
+            return new WP_Error("not_found", "No BP member type found with that slug", ['status' => 404]);
+        }
+
+        $user_ids = get_objects_in_term((int) $term->term_id, 'bp_member_type');
+        $user_ids = array_values(array_unique(array_map('intval', (array) $user_ids)));
+        sort($user_ids);
+
+        return rest_ensure_response([
+            'data' => $user_ids,
+            'bp_type' => $bp_type,
+            'status' => 'success',
+            'count' => count($user_ids),
+        ], 200);
+    }
+
+    private static function getProfileValue($user_id, $field_id)
+    {
+        if (!function_exists('bp_get_profile_field_data')) {
+            return '';
+        }
+
+        return self::normalizeProfileValue(bp_get_profile_field_data([
+            'field' => $field_id,
+            'user_id' => $user_id,
+        ]));
+    }
+
+    private static function normalizeProfileValue($value)
+    {
+        if (is_array($value)) {
+            $value = array_filter(array_map(function ($item) {
+                return is_scalar($item) ? trim((string) $item) : '';
+            }, $value), function ($item) {
+                return $item !== '';
+            });
+
+            return implode(', ', $value);
+        }
+
+        return is_scalar($value) ? trim((string) $value) : '';
+    }
+
+    private static function getQualificationValue($user_id, $type, $fallback_field_id)
+    {
+        if (function_exists('bp_xprofile_get_groups')) {
+            $groups = bp_xprofile_get_groups([
+                'user_id' => $user_id,
+                'fetch_fields' => true,
+                'populate_fields' => true,
+            ]);
+
+            foreach ((array) $groups as $group) {
+                $group_name = isset($group->name) ? strtolower($group->name) : '';
+
+                foreach ((array) $group->fields as $field) {
+                    $field_name = isset($field->name) ? strtolower($field->name) : '';
+                    if (strpos($field_name, 'qualification') === false) {
+                        continue;
+                    }
+
+                    $type_matches = strpos($field_name, $type) !== false
+                        || strpos($group_name, $type) !== false
+                        || ($type === 'academic' && strpos($group_name, 'education') !== false);
+
+                    if (!$type_matches || !isset($field->id)) {
+                        continue;
+                    }
+
+                    $value = self::getProfileValue($user_id, $field->id);
+                    if ($value !== '') {
+                        return $value;
+                    }
+                }
+            }
+        }
+
+        return $fallback_field_id ? self::getProfileValue($user_id, $fallback_field_id) : '';
+    }
+
+    private static function normalizeGender($value)
+    {
+        $value = strtolower(trim($value));
+
+        if ($value === 'his_male' || $value === 'male') {
+            return 'Male';
+        }
+
+        if ($value === 'her_female' || $value === 'female') {
+            return 'Female';
+        }
+
+        return $value;
+    }
+
     public static function getUserIDWithMemberId(WP_REST_REQUEST $request)
     {
         global $wpdb;
