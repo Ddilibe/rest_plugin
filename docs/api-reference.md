@@ -28,6 +28,8 @@ All paths are relative to the namespace root. With pretty permalinks the full UR
 | GET | [/nocertificate](#nocertificate) | 🔒 | `UserController::getMembersThatDoNotHaveCertificate` |
 | GET | [/certificate](#certificate) | 🔒 | `UserController::allCertificate` |
 | GET | [/user](#user) | 🔒 | `UserController::getUserWithUserId` |
+| GET | [/user/profile](#userprofile) | 🔒 | `UserController::getUserProfile` |
+| GET | [/user/by-type](#userby-type) | 🔒 | `UserController::getUserIdsByBpType` |
 | GET | [/user_id](#user_id) | 🔒 | `UserController::getUserIDWithMemberId` |
 | GET | [/validusers](#validusers) | 🔒 | `UserController::getValidUsers` |
 | GET | [/invalidusers](#invalidusers) | 🔒 | `UserController::getInvalidUsers` |
@@ -233,6 +235,91 @@ Response:
   "status": "success"
 }
 ```
+
+## user/profile
+
+**`GET /user/profile`** — `UserController::getUserProfile`
+
+Requires `user_id`, supplied as a query parameter or a JSON body. Returns the member's identity,
+contact, address, qualification, gender, and CISON number.
+
+```http
+GET /wp-json/cison/v1/user/profile?user_id=2695 HTTP/1.1
+```
+
+```json
+{
+  "data": {
+    "user_id": 2695,
+    "title": "Mr.",
+    "first_name": "Abdulazeez",
+    "last_name": "Khalid",
+    "middle_name": "",
+    "email": "abdulazeezkhalid41@gmail.com",
+    "phone_number": "07034832708",
+    "address": {
+      "address_1": "7 Specialist Quarters Road",
+      "address_2": "New Kutunku",
+      "city": "Gwagwalada",
+      "state": "FC",
+      "postcode": "902101",
+      "country": "Nigeria"
+    },
+    "professional_qualification": "Active Professional",
+    "academic_qualification": "Masters'",
+    "gender": "Male",
+    "cison_number": "20240017"
+  },
+  "status": "success"
+}
+```
+
+Profile values come from BuddyPress xprofile fields: title `538`, first name `1`, last name `2`,
+middle name `864`, phone `5`, address `22`/`23`, city `24`, state `276`, postcode `25`, country
+`917`, gender `557` (`his_Male`/`her_Female`, normalised to `Male`/`Female`), and CISON number
+`894`. Email comes from `wp_users.user_email`.
+
+Qualification values are resolved by finding xprofile fields whose names contain
+`professional qualification` or `academic qualification`. If no such field exists, professional
+qualification falls back to field `1614` (Account Type) and then `1425` (Profession Status), while
+academic qualification falls back to `859` (Education Type 1).
+
+| Status | Response |
+| --- | --- |
+| 200 | Profile envelope shown above |
+| 400 | `{ "code": "invalid_id", "message": "user ID is required" }` |
+| 404 | `{ "code": "not_found", "message": "No user found with that ID" }` |
+
+## user/by-type
+
+**`GET /user/by-type`** — `UserController::getUserIdsByBpType`
+
+Requires `bp_type`, supplied as a query parameter or a JSON body. Returns every user ID assigned to
+that BuddyPress member type.
+
+```http
+GET /wp-json/cison/v1/user/by-type?bp_type=student-member HTTP/1.1
+```
+
+```json
+{
+  "data": [ 42, 2695, 2731 ],
+  "bp_type": "student-member",
+  "status": "success",
+  "count": 3
+}
+```
+
+The slug is resolved against the `bp_member_type` taxonomy, then user IDs are read with
+`get_objects_in_term()`. IDs are de-duplicated and sorted ascending. Common slugs include
+`student-member`, `registered-statistician`, `corporate-member`, `retired-statistician`, and
+`fellow`.
+
+| Status | Response |
+| --- | --- |
+| 200 | `{ "data": [ ...ids... ], "bp_type": "...", "status": "success", "count": N }` |
+| 400 | `{ "code": "invalid_bp_type", "message": "bp_type is required" }` |
+| 404 | `{ "code": "not_found", "message": "No BP member type found with that slug" }` |
 
 ## user_id
 
