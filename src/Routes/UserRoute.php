@@ -67,6 +67,19 @@ class UserRoute
             'callback' => [UserController::class, 'getUserIdsByBpType'],
             'permission_callback' => [Auth::class, 'jwt'],
         ]);
+        register_rest_route('cison/v1', '/user/paid-all-dues', [
+            'methods' => 'GET',
+            'callback' => [UserController::class, 'userHasPaidAllDues'],
+            'permission_callback' => [Auth::class, 'jwt'],
+            'args' => [
+                'user_id' => [
+                    'required' => true,
+                    'validate_callback' => function ($param, $request, $key) {
+                        return is_numeric($param) && (int) $param > 0;
+                    },
+                ],
+            ],
+        ]);
         register_rest_route('cison/v1', '/user_id', [
             'methods' => 'GET',
             'callback' => [UserController::class, 'getUserIDWithMemberId'],

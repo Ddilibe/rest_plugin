@@ -431,6 +431,22 @@ class UserController
         ], 200);
     }
 
+    public static function userHasPaidAllDues(WP_REST_REQUEST $request)
+    {
+        $raw_user_id = $request->get_param('user_id');
+        $user_id = is_scalar($raw_user_id) ? absint($raw_user_id) : 0;
+
+        if ($user_id <= 0) {
+            return new WP_Error('invalid_user_id', 'user_id is required', ['status' => 400]);
+        }
+
+        return rest_ensure_response([
+            'user_id' => $user_id,
+            'has_paid_all_dues' => Money::cison_has_paid_all_dues($user_id),
+            'status' => 'success',
+        ], 200);
+    }
+
     private static function getProfileValue($user_id, $field_id)
     {
         if (!function_exists('bp_get_profile_field_data')) {

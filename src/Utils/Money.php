@@ -518,4 +518,25 @@ class Money
 
         return $unpaid;
     }
+
+    public static function cison_has_paid_all_dues($user_id)
+    {
+        $user_id = (int) $user_id;
+        if ($user_id <= 0) {
+            return false;
+        }
+
+        $paid_fees = self::cison_get_paid_fees($user_id);
+        if (empty($paid_fees)) {
+            return false;
+        }
+
+        foreach ($paid_fees as $paid) {
+            if ($paid !== true) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

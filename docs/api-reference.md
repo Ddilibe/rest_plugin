@@ -30,6 +30,7 @@ All paths are relative to the namespace root. With pretty permalinks the full UR
 | GET | [/user](#user) | 🔒 | `UserController::getUserWithUserId` |
 | GET | [/user/profile](#userprofile) | 🔒 | `UserController::getUserProfile` |
 | GET | [/user/by-type](#userby-type) | 🔒 | `UserController::getUserIdsByBpType` |
+| GET | [/user/paid-all-dues](#userpaid-all-dues) | 🔒 | `UserController::userHasPaidAllDues` |
 | GET | [/user_id](#user_id) | 🔒 | `UserController::getUserIDWithMemberId` |
 | GET | [/validusers](#validusers) | 🔒 | `UserController::getValidUsers` |
 | GET | [/invalidusers](#invalidusers) | 🔒 | `UserController::getInvalidUsers` |
@@ -320,6 +321,30 @@ The slug is resolved against the `bp_member_type` taxonomy, then user IDs are re
 | 200 | `{ "data": [ ...ids... ], "bp_type": "...", "status": "success", "count": N }` |
 | 400 | `{ "code": "invalid_bp_type", "message": "bp_type is required" }` |
 | 404 | `{ "code": "not_found", "message": "No BP member type found with that slug" }` |
+
+## user/paid-all-dues
+
+**`GET /user/paid-all-dues`** — `UserController::userHasPaidAllDues`
+
+Requires `user_id` as a query parameter. Returns `true` only when every required fee for that user
+is paid, using `Money::cison_has_paid_all_dues()`.
+
+```http
+GET /wp-json/cison/v1/user/paid-all-dues?user_id=2695 HTTP/1.1
+```
+
+```json
+{
+  "user_id": 2695,
+  "has_paid_all_dues": true,
+  "status": "success"
+}
+```
+
+| Status | Response |
+| --- | --- |
+| 200 | Result envelope shown above |
+| 400 | `{ "code": "invalid_user_id", "message": "user_id is required" }` |
 
 ## user_id
 
