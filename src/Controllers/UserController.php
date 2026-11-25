@@ -397,21 +397,26 @@ class UserController
 
         return rest_ensure_response(['data' => $profile, 'status' => 'success'], 200);
     }
-
     public static function getUserIdsByBpType(WP_REST_REQUEST $request)
     {
-        $body = $request->get_json_params();
-        $params = $request->get_param('bp_type');
-        $bp_type = isset($params['bp_type']) ? sanitize_text_field($params['bp_type']) : '';
-        // $bp_type = is_scalar($bp_type) ? sanitize_key($bp_type) : '';
+        $raw_bp_type = $request->get_param('bp_type');
+        $bp_type = is_string($raw_bp_type) ? sanitize_key($raw_bp_type) : '';
 
         if ($bp_type === '') {
-            return new WP_Error("invalid_bp_type $bp_type", "bp_type is required", ['status' => 400]);
+            return new WP_Error(
+                'invalid_bp_type',
+                'bp_type is required and must be a valid string.',
+                ['status' => 400]
+            );
         }
 
         $term = get_term_by('slug', $bp_type, 'bp_member_type');
         if (!$term) {
-            return new WP_Error("not_found $bp_type", "No BP member type found with that slug", ['status' => 404]);
+            return new WP_Error(
+                'not_found',
+                sprintf('No BP member type found with slug: %s', $bp_type),
+                ['status' => 404]
+            );
         }
 
         $user_ids = get_objects_in_term((int) $term->term_id, 'bp_member_type');
