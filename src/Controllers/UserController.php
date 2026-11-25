@@ -401,7 +401,8 @@ class UserController
     public static function getUserIdsByBpType(WP_REST_REQUEST $request)
     {
         $body = $request->get_json_params();
-        $bp_type = $request->get_param('bp_type');
+        $params = $request->get_param('bp_type');
+        $bp_type = isset($params['bp_type']) ? sanitize_text_field($params['bp_type']) : '';
         // $bp_type = is_scalar($bp_type) ? sanitize_key($bp_type) : '';
 
         if ($bp_type === '') {
