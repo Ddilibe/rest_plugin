@@ -406,7 +406,7 @@ class UserController
         // $bp_type = is_scalar($bp_type) ? sanitize_key($bp_type) : '';
 
         if ($bp_type === '') {
-            return new WP_Error("invalid_bp_type " + $bp_type, "bp_type is required", ['status' => 400]);
+            return new WP_Error("invalid_bp_type $bp_type", "bp_type is required", ['status' => 400]);
         }
 
         $term = get_term_by('slug', $bp_type, 'bp_member_type');
