@@ -410,7 +410,7 @@ class UserController
 
         $term = get_term_by('slug', $bp_type, 'bp_member_type');
         if (!$term) {
-            return new WP_Error("not_found " + $bp_type, "No BP member type found with that slug", ['status' => 404]);
+            return new WP_Error("not_found $bp_type", "No BP member type found with that slug", ['status' => 404]);
         }
 
         $user_ids = get_objects_in_term((int) $term->term_id, 'bp_member_type');
